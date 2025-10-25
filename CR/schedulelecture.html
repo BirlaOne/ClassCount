@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schedule Lecture</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <style>
+        /* -------------------
+         * Global Reset & Setup
+         * ------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0e5ec; /* Background for desktop view */
+            color: #1a202c;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* -------------------
+         * Icon Styling
+         * ------------------- */
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24;
+            vertical-align: middle;
+            font-size: 20px;
+        }
+
+        /* -------------------
+         * App Layout
+         * ------------------- */
+        .app-container {
+            width: 100%;
+            min-height: 100vh; /* Use min-height for full screen */
+            display: flex;
+            flex-direction: column;
+            /* Page background is light gray */
+            background-color: #f4f7fa; 
+            position: relative;
+            overflow: hidden; /* Hide overflow */
+        }
+
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto; /* Allow content to scroll */
+            padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
+            
+            /* --- Hide scrollbar --- */
+            scrollbar-width: none; /* For Firefox */
+            -ms-overflow-style: none; /* For IE and Edge */
+        }
+        
+        /* For Chrome, Safari, and Opera */
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+        /* --- End Hide scrollbar --- */
+
+        /* -------------------
+         * Header
+         * ------------------- */
+        header {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            /* Need to set color, as bg is not white */
+            color: #1a202c; 
+        }
+        
+        header .back-btn {
+            font-size: 28px;
+            font-variation-settings: 'wght' 500;
+            cursor: pointer;
+        }
+
+        header .header-text h1 {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        header .header-text p {
+            font-size: 16px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        /* -------------------
+         * General Card Style
+         * ------------------- */
+         .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+            border: 1px solid #f1f1f1;
+        }
+
+        /* -------------------
+         * Form Styles
+         * ------------------- */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #475569;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #ffffff;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            color: #1a202c;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .form-group input::placeholder {
+            color: #94a3b8;
+        }
+        
+        .form-group input:disabled {
+            background-color: #f1f5f9;
+            color: #718096;
+            cursor: not-allowed;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon .icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+        
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* -------------------
+         * Note Card
+         * ------------------- */
+        .note-card {
+            background-color: #f5f3ff;
+            border: 1px solid #e0e7ff;
+            box-shadow: none;
+            padding: 20px;
+        }
+        
+        .note-card h3 {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #1a202c;
+        }
+        
+        .note-card ul {
+            list-style-type: disc;
+            list-style-position: inside;
+            padding-left: 0;
+            color: #475569;
+            font-size: 14px;
+        }
+        
+        .note-card li {
+            margin-bottom: 8px;
+        }
+        
+        .note-card li:last-child {
+            margin-bottom: 0;
+        }
+
+
+        /* -------------------
+         * Bottom Navigation (UPDATED)
+         * ------------------- */
+        .bottom-nav {
+            position: absolute; 
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffff; 
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 10px 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid #e2e8f0;
+            
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            /* All items are inactive */
+            color: #718096; 
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 26px;
+            margin-bottom: 2px;
+        }
+        
+        /* NO .active styles needed */
+        
+        
+        /* -------------------
+         * Mobile-Friendly Media Query
+         * ------------------- */
+         
+        /* On screens 500px or wider (desktops), simulate a phone */
+        @media (min-width: 500px) {
+            body {
+                /* Center the app on desktop */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 16px 0;
+            }
+            
+            .app-container {
+                /* Constrain the width and height */
+                max-width: 450px;
+                height: 95vh;
+                max-height: 850px;
+                
+                /* Add rounded corners and shadow */
+                border-radius: 24px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+                border: 1px solid #f8f9fa;
+            }
+            
+            .bottom-nav {
+                /* Add rounded corners to match the app container */
+                border-bottom-left-radius: 24px;
+                border-bottom-right-radius: 24px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <main class="main-content">
+
+            <header>
+                <span class="material-symbols-outlined back-btn">arrow_back</span>
+                <div class="header-text">
+                    <h1>Schedule Lecture</h1>
+                    <p>Create a new lecture session</p>
+                </div>
+            </header>
+
+            <div class="card">
+                <form action="#">
+                    <div class="form-group">
+                        <label for="subject">
+                            <span class="material-symbols-outlined">book</span>
+                            Subject Name
+                        </label>
+                        <input type="text" id="subject" placeholder="e.g., Data Structures">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="professor">
+                            <span class="material-symbols-outlined">person</span>
+                            Professor Name
+                        </label>
+                        <input type="text" id="professor" placeholder="e.g., Dr. Rajesh Kumar">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="class">
+                            <span class="material-symbols-outlined">groups</span>
+                            Class
+                        </label>
+                        <input type="text" id="class" value="CS 2025" disabled>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="date">
+                                <span class="material-symbols-outlined">calendar_month</span>
+                                Date
+                            </label>
+                            <div class="input-with-icon">
+                                <input type="text" id="date" placeholder="dd----yyyy">
+                                <span class="material-symbols-outlined icon">calendar_today</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="time">
+                                <span class="material-symbols-outlined">schedule</span>
+                                Time Slot
+                            </label>
+                            <input type="text" id="time" value="09:00 AM - 10:00 AM">
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="submit-btn">Schedule Lecture</button>
+                </form>
+            </div>
+            
+            <div class="card note-card">
+                <h3>Note</h3>
+                <ul>
+                    <li>Students will be notified about the scheduled lecture</li>
+                    <li>You can record attendance after the lecture time</li>
+                    <li>Only students from the specified class will be listed</li>
+                </ul>
+            </div>
+
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item">
+                <span class="material-symbols-outlined">home</span>
+                Home
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-outlined">playlist_add_check</span>
+                Record
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-outlined">groups</span>
+                Students
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-outlined">bar_chart</span>
+                Analytics
+            </a>
+        </nav>
+
+    </div>
+
+</body>
+</html>
