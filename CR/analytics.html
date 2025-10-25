@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Attendance Portal</title>
+    <title>Analytics & Reports</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -27,7 +27,7 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f4f7fa; /* Light gray background for the page */
+            background-color: #e0e5ec; /* Background for desktop view */
             color: #1a202c;
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
@@ -50,42 +50,55 @@
          * App Layout
          * ------------------- */
         .app-container {
-            /* Simulate a mobile screen on desktop */
-            max-width: 450px;
-            margin: 0 auto;
-            
-            height: 100vh;
+            width: 100%;
+            min-height: 100vh; /* Use min-height for full screen */
             display: flex;
             flex-direction: column;
-            background-color: #f4f7fa;
+            background-color: #FFFFFF; /* White app background */
             position: relative;
-            /* Add borders to frame the app on desktop */
-            border-left: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
+            overflow: hidden; /* Hide overflow */
         }
 
         .main-content {
             flex-grow: 1;
             overflow-y: auto; /* Allow content to scroll */
             padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
-        }
-
-        section {
-            margin-bottom: 28px;
+            
+            /* --- Hide scrollbar --- */
+            scrollbar-width: none; /* For Firefox */
+            -ms-overflow-style: none; /* For IE and Edge */
         }
         
-        h2 {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
+        /* For Chrome, Safari, and Opera */
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+        /* --- End Hide scrollbar --- */
+        
+        /* General Card Style */
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+            border: 1px solid #f1f1f1;
+        }
+        
+        .card-title {
             display: flex;
             align-items: center;
             gap: 8px;
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #1a202c;
         }
         
-        h2 .material-symbols-outlined {
-            color: #4a5568;
+        .card-title .material-symbols-outlined {
+            color: #475569;
         }
+
 
         /* -------------------
          * Header
@@ -108,201 +121,290 @@
         }
 
         /* -------------------
-         * Stats Grid
+         * Analytics Stats Grid
          * ------------------- */
-        .stats-grid {
+        .stats-grid-analytics {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
-        }
-
-        .stat-card {
-            border-radius: 12px;
-            padding: 16px;
-        }
-
-        .stat-card .icon .material-symbols-outlined {
-            font-size: 28px;
+            margin-bottom: 24px;
         }
         
-        .stat-card span {
-            display: block;
+        .stat-card-analytics {
+            background-color: #f8fafc;
+            border: 1px solid #f1f5f9;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 14px;
             font-weight: 500;
-            margin-top: 12px;
-            margin-bottom: 4px;
+            color: #718096;
         }
         
-        .stat-card strong {
+        .stat-card-analytics .material-symbols-outlined {
+            font-size: 24px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 8px 0 4px 0;
+        }
+        
+        .stat-trend {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .stat-trend.positive { color: #16a34a; }
+        .stat-trend.negative { color: #ef4444; }
+        .stat-trend.neutral { color: #f59e0b; }
+        
+        /* Icon Colors */
+        .stat-card-analytics.students .material-symbols-outlined { color: #4f46e5; }
+        .stat-card-analytics.attendance .material-symbols-outlined { color: #16a34a; }
+        .stat-card-analytics.score .material-symbols-outlined { color: #f59e0b; }
+        .stat-card-analytics.blacklisted .material-symbols-outlined { color: #ef4444; }
+        
+        
+        /* -------------------
+         * Performance Distribution Card
+         * ------------------- */
+        .dist-row {
+            margin-bottom: 14px;
+        }
+        .dist-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .dist-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            margin-bottom: 6px;
+        }
+        
+        .dist-label {
+            font-weight: 500;
+            color: #475569;
+        }
+        
+        .dist-count {
+            font-weight: 600;
+        }
+        
+        .dist-bar-bg {
+            height: 8px;
+            background-color: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .dist-bar {
+            height: 100%;
+            border-radius: 4px;
+        }
+        
+        .dist-count.excellent { color: #16a34a; }
+        .dist-bar.excellent { background-color: #bbf7d0; }
+        
+        .dist-count.good { color: #f59e0b; }
+        .dist-bar.good { background-color: #fef3c7; }
+        
+        .dist-count.needs { color: #ef4444; }
+        .dist-bar.needs { background-color: #fee2e2; }
+        
+        
+        /* -------------------
+         * Overview Grid (Lectures/Activities)
+         * ------------------- */
+        .overview-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .overview-card {
+            padding: 16px;
+            border-radius: 12px;
+            position: relative;
+        }
+        
+        .overview-card.lectures {
+            background-color: #f5f3ff;
+            border: 1px solid #ede9fe;
+        }
+        .overview-card.activities {
+            background-color: #f0fdf4;
+            border: 1px solid #dcfce7;
+        }
+        
+        .overview-check {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            color: #4f46e5;
+            font-size: 18px;
+        }
+        
+        .overview-card.activities .overview-check {
+            color: #16a34a;
+        }
+        
+        .overview-title {
+            font-weight: 500;
+            color: #475569;
+            font-size: 14px;
+        }
+        
+        .overview-value {
             font-size: 26px;
             font-weight: 700;
             color: #1a202c;
-        }
-
-        /* Card specific colors */
-        .stat-card.students {
-            background-color: #f5f3ff;
-            color: #6366f1;
-        }
-        .stat-card.attendance {
-            background-color: #f0fdf4;
-            color: #22c55e;
-        }
-        .stat-card.score {
-            background-color: #fffbeb;
-            color: #f59e0b;
-        }
-        .stat-card.blacklisted {
-            background-color: #fef2f2;
-            color: #ef4444;
+            margin: 4px 0 10px 0;
         }
         
-        /* Set text colors within cards */
-        .stat-card span {
-            color: #4a5568; /* Use a consistent darker gray for labels */
-        }
-        .stat-card.students span { color: #6366f1; }
-        .stat-card.attendance span { color: #22c55e; }
-        .stat-card.score span { color: #b45309; }
-        .stat-card.blacklisted span { color: #ef4444; }
-
-
-        /* -------------------
-         * Quick Actions
-         * ------------------- */
-        .actions-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .action-btn {
-            border: none;
-            border-radius: 12px;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: 600;
-            color: #ffffff;
-            cursor: pointer;
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 110px;
-            transition: transform 0.2s ease;
+        .overview-progress-bar {
+            width: 100%;
+            height: 6px;
+            background-color: #e0e7ff;
+            border-radius: 3px;
         }
         
-        .action-btn:active {
-            transform: scale(0.98);
+        .overview-progress-bar .progress {
+            height: 100%;
+            border-radius: 3px;
         }
-
-        .action-btn .material-symbols-outlined {
-            font-size: 28px;
-        }
-
-        .action-btn.schedule {
+        
+        .overview-card.lectures .progress {
             background-color: #4f46e5;
         }
-
-        .action-btn.record {
+        
+        .overview-card.activities .overview-progress-bar {
+            background-color: #dcfce7;
+        }
+        .overview-card.activities .progress {
             background-color: #16a34a;
         }
 
         /* -------------------
-         * Upcoming Sections
+         * Top Performers Card
          * ------------------- */
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .section-header h2 {
-            margin-bottom: 0;
-        }
-
-        .count-badge {
-            background-color: #e0e7ff;
-            color: #4f46e5;
-            font-size: 12px;
-            font-weight: 600;
-            padding: 2px 8px;
-            border-radius: 12px;
+        .performer-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
         
-        /* Specific count badge for activities */
-        .upcoming-activities .count-badge {
-             background-color: #dcfce7;
-             color: #16a34a;
-        }
-
-        /* General Card Style (for lectures/activities) */
-        .card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
-            border: 1px solid #f1f1f1;
-        }
-
-        .card-header {
+        .performer-item {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
         }
-
-        .card h3 {
-            font-size: 16px;
+        .performer-item:first-child {
+            padding-top: 0;
+        }
+        .performer-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .rank {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #4f46e5;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-weight: 600;
-            margin-bottom: 2px;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .performer-info {
+            flex-grow: 1;
+        }
+        
+        .performer-name {
+            font-weight: 600;
             color: #1a202c;
         }
-
-        .card .subtitle {
+        
+        .performer-sub {
             font-size: 14px;
             color: #718096;
         }
-
-        .badge {
-            font-size: 12px;
-            font-weight: 500;
+        
+        .performer-score {
+            font-size: 14px;
+            font-weight: 600;
             padding: 4px 10px;
-            border-radius: 12px;
-            flex-shrink: 0; /* Prevent badge from shrinking */
-            margin-left: 8px;
-        }
-
-        .badge.cs {
-            background-color: #dbeafe;
-            color: #2563eb;
-        }
-
-        .badge.college {
+            border-radius: 16px;
             background-color: #f0fdf4;
             color: #16a34a;
             border: 1px solid #bbf7d0;
+            flex-shrink: 0;
         }
 
-        .card-footer {
-            display: flex;
-            gap: 20px;
+        /* -------------------
+         * Blacklisted Students Card
+         * ------------------- */
+        .blacklisted-card {
+            background-color: #fef2f2;
+            border: 1px solid #fee2e2;
+        }
+        
+        .blacklisted-card .card-title .material-symbols-outlined {
+            color: #ef4444;
+        }
+        
+        .card-subtitle {
             font-size: 14px;
-            color: #4a5568;
-            font-weight: 500;
+            color: #b91c1c;
+            margin-top: -12px;
+            margin-bottom: 16px;
         }
-
-        .info-item {
+        
+        .blacklisted-item {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 6px;
+            background-color: #ffffff;
+            border: 1px solid #fecaca;
+            padding: 12px;
+            border-radius: 8px;
         }
-
-        .info-item .material-symbols-outlined {
-            font-size: 18px;
+        
+        .blacklisted-name {
+            font-weight: 600;
+            color: #1a202c;
+        }
+        
+        .blacklisted-id {
+            font-size: 14px;
             color: #718096;
+        }
+        
+        .score-badge-danger {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 16px;
+            background-color: #ef4444;
+            color: #ffffff;
+            flex-shrink: 0;
         }
 
 
@@ -310,20 +412,17 @@
          * Bottom Navigation
          * ------------------- */
         .bottom-nav {
-            position: absolute; /* Changed from fixed to absolute within container */
+            position: absolute; 
             bottom: 0;
             left: 0;
             right: 0;
-            
-            /* Match the app container width */
-            max-width: 450px;
-            margin: 0 auto; 
-            
-            background-color: #ffffff;
+            background-color: #ffffff; 
             display: flex;
             justify-content: space-around;
             padding: 12px 0 10px 0;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid #e2e8f0;
+            
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
         }
@@ -337,19 +436,49 @@
             font-size: 12px;
             font-weight: 500;
         }
-
         .nav-item .material-symbols-outlined {
             font-size: 26px;
             margin-bottom: 2px;
         }
-
         .nav-item.active {
             color: #4f46e5; /* Active color */
         }
-
-        /* Make the active icon 'filled' */
         .nav-item.active .material-symbols-outlined {
             font-variation-settings: 'FILL' 1;
+        }
+        
+        
+        /* -------------------
+         * Mobile-Friendly Media Query
+         * ------------------- */
+         
+        /* On screens 500px or wider (desktops), simulate a phone */
+        @media (min-width: 500px) {
+            body {
+                /* Center the app on desktop */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 16px 0;
+            }
+            
+            .app-container {
+                /* Constrain the width and height */
+                max-width: 450px;
+                height: 95vh;
+                max-height: 850px;
+                
+                /* Add rounded corners and shadow */
+                border-radius: 24px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+                border: 1px solid #f8f9fa;
+            }
+            
+            .bottom-nav {
+                /* Add rounded corners to match the app container */
+                border-bottom-left-radius: 24px;
+                border-bottom-right-radius: 24px;
+            }
         }
 
     </style>
@@ -361,135 +490,178 @@
         <main class="main-content">
 
             <header>
-                <h1>Attendance Portal</h1>
-                <p>CR Dashboard - CS 2025</p>
+                <h1>Analytics & Reports</h1>
+                <p>CS 2025 - Performance Insights</p>
             </header>
 
-            <section class="stats-grid">
-                <div class="stat-card students">
-                    <div class="icon">
+            <section class="stats-grid-analytics">
+                <div class="stat-card-analytics students">
+                    <div class="stat-header">
                         <span class="material-symbols-outlined">groups</span>
+                        Total Students
                     </div>
-                    <span>Total Students</span>
-                    <strong>5</strong>
+                    <div class="stat-value">5</div>
+                    <div class="stat-trend positive">+5% vs last month</div>
                 </div>
-                <div class="stat-card attendance">
-                    <div class="icon">
+                
+                <div class="stat-card-analytics attendance">
+                    <div class="stat-header">
                         <span class="material-symbols-outlined">trending_up</span>
+                        Avg Attendance
                     </div>
-                    <span>Avg Attendance</span>
-                    <strong>84%</strong>
+                    <div class="stat-value">84%</div>
+                    <div class="stat-trend positive">+3% vs last month</div>
                 </div>
-                <div class="stat-card score">
-                    <div class="icon">
+                
+                <div class="stat-card-analytics score">
+                    <div class="stat-header">
                         <span class="material-symbols-outlined">emoji_events</span>
+                        Avg Score
                     </div>
-                    <span>Avg Score</span>
-                    <strong>76/100</strong>
+                    <div class="stat-value">76/100</div>
+                    <div class="stat-trend neutral">+2% vs last month</div>
                 </div>
-                <div class="stat-card blacklisted">
-                    <div class="icon">
+                
+                <div class="stat-card-analytics blacklisted">
+                    <div class="stat-header">
                         <span class="material-symbols-outlined">warning</span>
+                        Blacklisted
                     </div>
-                    <span>Blacklisted</span>
-                    <strong>1</strong>
+                    <div class="stat-value">1</div>
+                    <div class="stat-trend negative">-2 vs last month</div>
                 </div>
             </section>
 
-            <section class="quick-actions">
-                <h2>Quick Actions</h2>
-                <div class="actions-container">
-                    <button class="action-btn schedule">
-                        <span class="material-symbols-outlined">calendar_month</span>
-                        Schedule Lecture
-                    </button>
-                    <button class="action-btn record">
-                        <span class="material-symbols-outlined">task_alt</span>
-                        Record Attendance
-                    </button>
+            <div class="card performance-card">
+                <div class="card-title">
+                    <span class="material-symbols-outlined">bar_chart</span>
+                    Performance Distribution
                 </div>
-            </section>
-
-            <section class="upcoming-section upcoming-lectures">
-                <div class="section-header">
-                    <h2>
-                        <span class="material-symbols-outlined">book</span>
-                        Upcoming Lectures
-                    </h2>
-                    <span class="count-badge">1</span>
-                </div>
-
-                <div class="card lecture-card">
-                    <div class="card-header">
-                        <div>
-                            <h3>Database Management</h3>
-                            <p class="subtitle">Prof. Sanjay Verma</p>
-                        </div>
-                        <span class="badge cs">CS 2025</span>
+                
+                <div class="dist-row">
+                    <div class="dist-header">
+                        <span class="dist-label">Excellent (80-100)</span>
+                        <span class="dist-count excellent">3 students</span>
                     </div>
-                    <div class="card-footer">
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">calendar_month</span>
-                            25/10/2025
-                        </div>
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">schedule</span>
-                            11:00 AM - 12:00 PM
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="upcoming-section upcoming-activities">
-                <div class="section-header">
-                    <h2>
-                        <span class="material-symbols-outlined">celebration</span>
-                        Upcoming Activities
-                    </h2>
-                    <span class="count-badge">2</span>
-                </div>
-
-                <div class="card activity-card">
-                    <div class="card-header">
-                        <div>
-                            <h3>Tech Fest 2025</h3>
-                            <p class="subtitle">Technical Club</p>
-                        </div>
-                        <span class="badge college">College-wide</span>
-                    </div>
-                    <div class="card-footer">
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">calendar_month</span>
-                            28/10/2025
-                        </div>
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">schedule</span>
-                            10:00 AM - 05:00 PM
-                        </div>
+                    <div class="dist-bar-bg">
+                        <div class="dist-bar excellent" style="width: 60%;"></div>
                     </div>
                 </div>
                 
-                <div class="card activity-card">
-                    <div class="card-header">
-                        <div>
-                            <h3>Hackathon 2025</h3>
-                            <p class="subtitle">Technical Club</p>
-                        </div>
-                        <span class="badge college">College-wide</span>
+                <div class="dist-row">
+                    <div class="dist-header">
+                        <span class="dist-label">Good (60-79)</span>
+                        <span class="dist-count good">1 students</span>
                     </div>
-                     <div class="card-footer">
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">calendar_month</span>
-                            TBA
-                        </div>
+                    <div class="dist-bar-bg">
+                        <div class="dist-bar good" style="width: 20%;"></div>
+                    </div>
+                </div>
+                
+                <div class="dist-row">
+                    <div class="dist-header">
+                        <span class="dist-label">Needs Improvement (<60)</span>
+                        <span class="dist-count needs">1 students</span>
+                    </div>
+                    <div class="dist-bar-bg">
+                        <div class="dist-bar needs" style="width: 20%;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="overview-grid">
+                <div class="overview-card lectures">
+                    <span class="material-symbols-outlined overview-check">check_circle</span>
+                    <div class="overview-title">Lectures</div>
+                    <div class="overview-value">2/3</div>
+                    <div class="overview-progress-bar">
+                        <div class="progress" style="width: 66.6%;"></div>
+                    </div>
+                </div>
+                
+                <div class="overview-card activities">
+                    <span class="material-symbols-outlined overview-check">check_circle</span>
+                    <div class="overview-title">Activities</div>
+                    <div class="overview-value">2/4</div>
+                    <div class="overview-progress-bar">
+                        <div class="progress" style="width: 50%;"></div>
                     </div>
                 </div>
             </section>
+
+            <div class="card top-performers-card">
+                <div class="card-title">
+                    <span class="material-symbols-outlined">emoji_events</span>
+                    Top Performers
+                </div>
+                <ul class="performer-list">
+                    <li class="performer-item">
+                        <div class="rank">1</div>
+                        <div class="performer-info">
+                            <div class="performer-name">Rahul Sharma</div>
+                            <div class="performer-sub">Computer Science • 2025</div>
+                        </div>
+                        <div class="performer-score">85</div>
+                    </li>
+                    <li class="performer-item">
+                        <div class="rank">2</div>
+                        <div class="performer-info">
+                            <div class="performer-name">Priya Patel</div>
+                            <div class="performer-sub">Computer Science • 2025</div>
+                        </div>
+                        <div class="performer-score">84</div>
+                    </li>
+                    <li class="performer-item">
+                        <div class="rank">3</div>
+                        <div class="performer-info">
+                            <div class="performer-name">Sneha Desai</div>
+                            <div class="performer-sub">Computer Science • 2025</div>
+                        </div>
+                        <div class="performer-score">82</div>
+                    </li>
+                    <li class="performer-item">
+                        <div class="rank">4</div>
+                        <div class="performer-info">
+                            <div class="performer-name">Amit Kumar</div>
+                            <div class="performer-sub">Computer Science • 2025</div>
+                        </div>
+                        <div class="performer-score">70</div>
+                    </li>
+                    <li class="performer-item">
+                        <div class="rank">5</div>
+                        <div class="performer-info">
+                            <div class="performer-name">Vikram Singh</div>
+                            <div class="performer-sub">Computer Science • 2025</div>
+                        </div>
+                        <div class="performer-score">58</div>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card blacklisted-card">
+                <div class="card-title blacklisted">
+                    <span class="material-symbols-outlined">warning</span>
+                    Blacklisted Students
+                </div>
+                <div class="card-subtitle">
+                    Students with less than 75% lecture attendance
+                </div>
+                
+                <div class="blacklisted-item">
+                    <div>
+                        <div class="blacklisted-name">Vikram Singh</div>
+                        <div class="blacklisted-id">ST2025005</div>
+                    </div>
+                    <div class="score-badge-danger">65%</div>
+                </div>
+            </div>
+            
+            <div style="height: 50px;"></div>
 
         </main>
 
         <nav class="bottom-nav">
-            <a href="#" class="nav-item active">
+            <a href="#" class="nav-item">
                 <span class="material-symbols-outlined">home</span>
                 Home
             </a>
@@ -501,7 +673,7 @@
                 <span class="material-symbols-outlined">groups</span>
                 Students
             </a>
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item active">
                 <span class="material-symbols-outlined">bar_chart</span>
                 Analytics
             </a>
