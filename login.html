@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+  <title>Login - BirlaOne</title>
+  <link rel="icon" type="image/png" href="https://i.ibb.co/N6QNPW56/logo-1-modified.png" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <style>
+    :root {
+      --primary-accent: #56ab2f;
+      --primary-gradient: linear-gradient(90deg, #a8e063, #56ab2f);
+      --danger-color: #e53935;
+      --font-family: 'Inter', sans-serif;
+      --bg-gradient-light: linear-gradient(180deg, #f5f5f7, #e9e9ed);
+      --card-bg-light: rgba(255, 255, 255, 0.9);
+      --text-primary-light: #121212;
+      --text-secondary-light: #5f5f5f;
+      --border-color-light: #e0e0e0;
+      --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.05);
+      --bg-gradient-dark: linear-gradient(180deg, #2a2a3d, #1e1e2e);
+      --card-bg-dark: rgba(42, 42, 61, 0.9);
+      --text-primary-dark: #f0f0f0;
+      --text-secondary-dark: #a0a0b0;
+      --border-color-dark: #4a4a6a;
+      --shadow-dark: 0 4px 20px rgba(0, 0, 0, 0.2);
+    }
+    [data-theme="light"] {
+      --bg-gradient: var(--bg-gradient-light);
+      --card-bg: var(--card-bg-light);
+      --text-primary: var(--text-primary-light);
+      --text-secondary: var(--text-secondary-light);
+      --border-color: var(--border-color-light);
+      --shadow: var(--shadow-light);
+    }
+    [data-theme="dark"] {
+      --bg-gradient: var(--bg-gradient-dark);
+      --card-bg: var(--card-bg-dark);
+      --text-primary: var(--text-primary-dark);
+      --text-secondary: var(--text-secondary-dark);
+      --border-color: var(--border-color-dark);
+      --shadow: var(--shadow-dark);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-family);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: var(--bg-gradient);
+      color: var(--text-primary);
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+    .login-card {
+      background: var(--card-bg);
+      padding: 40px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border-color);
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+      animation: fadeUp 0.5s ease;
+    }
+     @keyframes fadeUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .app-title {
+      font-family: 'Pacifico', cursive;
+      font-size: 32px;
+      font-weight: 400;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .login-card p {
+      color: var(--text-secondary);
+      margin-bottom: 25px;
+    }
+    .input-field {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      background-color: transparent;
+      color: var(--text-primary);
+      font-size: 16px;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary-accent);
+      box-shadow: 0 0 0 3px rgba(86, 171, 47, 0.2);
+    }
+    .login-button {
+      width: 100%;
+      padding: 14px;
+      background: var(--primary-gradient);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+    .login-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(86, 171, 47, 0.3);
+    }
+    .login-button:disabled {
+      background: var(--text-secondary);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .error-message {
+      color: var(--danger-color);
+      margin-top: 15px;
+      min-height: 20px;
+      font-weight: 500;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <h1 class="app-title">BirlaOne</h1>
+    <p>Please sign in to your account.</p>
+    
+    <input type="number" id="studentId" class="input-field" placeholder="Student ID" />
+    <input type="password" id="password" class="input-field" placeholder="Password" />
+    <button class="login-button" id="loginBtn" onclick="login()">Login</button>
+    <div id="error" class="error-message"></div>
+  </div>
+
+<script>
+  const SUPABASE_URL = "https://eikriuddsuguybvvyzjl.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpa3JpdWRkc3VndXlidnZ5empsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMjIxNTAsImV4cCI6MjA3MzY5ODE1MH0.HNh2gGO8nWzAjxh5Oa3cs_8WKaq9mq9TyLCvPOkcr2c";
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  async function login() {
+    const studentId = document.getElementById("studentId").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const errorDiv = document.getElementById("error");
+    const loginBtn = document.getElementById("loginBtn");
+
+    errorDiv.textContent = "";
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Logging in...";
+
+    if (!studentId || !password) {
+      errorDiv.textContent = "Please enter Student ID and Password.";
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login";
+      return;
+    }
+
+    try {
+      // 🔹 Step 1: Get email by student ID using an RPC call
+      const { data: email, error: rpcError } = await supabase
+        .rpc("get_email_by_student_id", { p_id: parseInt(studentId, 10) });
+
+      if (rpcError || !email) {
+        console.error("Email lookup failed:", rpcError);
+        errorDiv.textContent = "Student ID not found.";
+        return;
+      }
+
+      // 🔹 Step 2: Try to sign in with the retrieved email and password
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (authError) {
+        console.error("Auth error:", authError);
+        errorDiv.textContent = "Invalid ID or Password.";
+        return;
+      }
+
+      const user = authData.user;
+      if (user && user.id) {
+        // 🔹 Step 3: Update the auth_id in your public users table
+        const { error: updateError } = await supabase
+          .from("users")
+          .update({ auth_id: user.id })
+          .eq("id", parseInt(studentId, 10));
+
+        if (updateError) {
+          console.error("⚠️ Failed to update auth_id:", updateError);
+          // This is not a critical error for the user, so we don't show it.
+        }
+      }
+
+      // 🔹 Step 4: Redirect to the main app page
+      window.location.href = "index.html";
+
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      errorDiv.textContent = "An unexpected error occurred. Please try again.";
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login";
+    }
+  }
+
+  // Check if user is already logged in on page load
+  document.addEventListener('DOMContentLoaded', async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      console.log('Active session found. Redirecting to home page.');
+      window.location.href = 'index.html';
+    }
+  });
+
+  // Add Enter key support for a smoother experience
+  document.getElementById('password').addEventListener('keypress', e => {
+    if (e.key === 'Enter') login();
+  });
+  document.getElementById('studentId').addEventListener('keypress', e => {
+    if (e.key === 'Enter') document.getElementById('password').focus();
+  });
+</script>
+
+</body>
+</html>
