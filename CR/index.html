@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Portal</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <style>
+        /* -------------------
+         * Global Reset & Setup
+         * ------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0e5ec; /* Background for desktop view */
+            color: #1a202c;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* -------------------
+         * Icon Styling
+         * ------------------- */
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24;
+            vertical-align: middle;
+            font-size: 20px;
+        }
+
+        /* -------------------
+         * App Layout
+         * ------------------- */
+        .app-container {
+            width: 100%;
+            min-height: 100vh; /* Use min-height for full screen */
+            display: flex;
+            flex-direction: column;
+            background-color: #FFFFFF; /* White app background */
+            position: relative;
+            overflow: hidden; /* Hide overflow */
+        }
+
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto; /* Allow content to scroll */
+            padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
+            
+            /* --- Hide scrollbar --- */
+            scrollbar-width: none; /* For Firefox */
+            -ms-overflow-style: none; /* For IE and Edge */
+        }
+        
+        /* For Chrome, Safari, and Opera */
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+        /* --- End Hide scrollbar --- */
+
+
+        section {
+            margin-bottom: 28px;
+        }
+        
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        h2 .material-symbols-outlined {
+            color: #4a5568;
+        }
+
+        /* -------------------
+         * Header
+         * ------------------- */
+        header {
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.2;
+        }
+
+        header p {
+            font-size: 16px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        /* -------------------
+         * Stats Grid (New Layout)
+         * ------------------- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .stat-card {
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .stat-icon .material-symbols-outlined {
+            font-size: 24px;
+        }
+
+        .stat-info span {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #718096;
+            margin-bottom: 2px;
+        }
+
+        .stat-info strong {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.2;
+        }
+
+        /* Card specific gradients and icon colors */
+        .stat-card.students {
+            background-color: #f5f3ff;
+        }
+        .stat-card.students .stat-icon { color: #6366f1; }
+        
+        .stat-card.attendance {
+            background-color: #f0fdf4;
+        }
+        .stat-card.attendance .stat-icon { color: #22c55e; }
+        
+        .stat-card.score {
+            background-color: #fffbeb;
+        }
+        .stat-card.score .stat-icon { color: #f59e0b; }
+        
+        .stat-card.blacklisted {
+            background-color: #fef2f2;
+        }
+        .stat-card.blacklisted .stat-icon { color: #ef4444; }
+
+
+        /* -------------------
+         * Quick Actions (REVERTED)
+         * ------------------- */
+        .actions-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .action-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            cursor: pointer;
+            min-height: 110px;
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 8px; /* Space between icon and text */
+        }
+        
+        .action-btn:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .action-btn .material-symbols-outlined { font-size: 28px; }
+        
+        .action-btn.schedule {
+            background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+        }
+        /* --- This is the reverted style --- */
+        .action-btn.record {
+            background-image: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        }
+        /* --- End reverted style --- */
+
+
+        /* -------------------
+         * Upcoming Sections
+         * ------------------- */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .section-header h2 { margin-bottom: 0; }
+        .count-badge {
+            background-color: #e0e7ff;
+            color: #4f46e5;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .upcoming-activities .count-badge {
+             background-color: #dcfce7;
+             color: #16a34a;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+            border: 1px solid #f1f1f1; /* Light border for card */
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .card h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 2px;
+            color: #1a202c;
+        }
+        .card .subtitle {
+            font-size: 14px;
+            color: #718096;
+        }
+        .badge {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 12px;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+        .badge.cs {
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+        .badge.college {
+            background-color: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+        }
+        .card-footer {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #4a5568;
+            font-weight: 500;
+        }
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .info-item .material-symbols-outlined {
+            font-size: 18px;
+            color: #718096;
+        }
+
+
+        /* -------------------
+         * Bottom Navigation
+         * ------------------- */
+        .bottom-nav {
+            position: absolute; 
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffff; 
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 10px 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid #e2e8f0;
+            
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #718096; /* Inactive color */
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 26px;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #4f46e5; /* Active color */
+        }
+        .nav-item.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        
+        /* -------------------
+         * Mobile-Friendly Media Query
+         * ------------------- */
+         
+        /* On screens 500px or wider (desktops), simulate a phone */
+        @media (min-width: 500px) {
+            body {
+                /* Center the app on desktop */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 16px 0;
+            }
+            
+            .app-container {
+                /* Constrain the width and height */
+                max-width: 450px;
+                height: 95vh;
+                max-height: 850px;
+                
+                /* Add rounded corners and shadow */
+                border-radius: 24px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+                border: 1px solid #f8f9fa;
+            }
+            
+            .bottom-nav {
+                /* Add rounded corners to match the app container */
+                border-bottom-left-radius: 24px;
+                border-bottom-right-radius: 24px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <main class="main-content">
+
+            <header>
+                <h1>Attendance Portal</h1>
+                <p>CR Dashboard - CS 2025</p>
+            </header>
+
+            <section class="stats-grid">
+    
+                <div class="stat-card students">
+                    <div class="stat-icon">
+                        <span class="material-symbols-outlined">groups</span>
+                    </div>
+                    <div class="stat-info">
+                        <span>Total Students</span>
+                        <strong>5</strong>
+                    </div>
+                </div>
+                
+                <div class="stat-card attendance">
+                    <div class="stat-icon">
+                        <span class="material-symbols-outlined">trending_up</span>
+                    </div>
+                    <div class="stat-info">
+                        <span>Avg Attendance</span>
+                        <strong>84%</strong>
+                    </div>
+                </div>
+                
+                <div class="stat-card score">
+                    <div class="stat-icon">
+                        <span class="material-symbols-outlined">emoji_events</span>
+                    </div>
+                    <div class="stat-info">
+                        <span>Avg Score</span>
+                        <strong>76/100</strong>
+                    </div>
+                </div>
+                
+                <div class="stat-card blacklisted">
+                    <div class="stat-icon">
+                        <span class="material-symbols-outlined">warning</span>
+                    </div>
+                    <div class="stat-info">
+                        <span>Blacklisted</span>
+                        <strong>1</strong>
+                    </div>
+                </div>
+            
+            </section>
+
+            <section class="quick-actions">
+                <h2>Quick Actions</h2>
+                <div class="actions-container">
+                    <button class="action-btn schedule">
+                        <span class="material-symbols-outlined">calendar_month</span>
+                        <span>Schedule Lecture</span>
+                    </button>
+                    <button class="action-btn record">
+                        <span class="material-symbols-outlined">task_alt</span>
+                        <span>Record Attendance</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="upcoming-section upcoming-lectures">
+                <div class="section-header">
+                    <h2>
+                        <span class="material-symbols-outlined">book</span>
+                        Upcoming Lectures
+                    </h2>
+                    <span class="count-badge">1</span>
+                </div>
+
+                <div class="card lecture-card">
+                    <div class="card-header">
+                        <div>
+                            <h3>Database Management</h3>
+                            <p class="subtitle">Prof. Sanjay Verma</p>
+                        </div>
+                        <span class="badge cs">CS 2025</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="info-item">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            25/10/2025
+                        </div>
+                        <div class="info-item">
+                            <span class="material-symbols-outlined">schedule</span>
+                            11:00 AM - 12:00 PM
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="upcoming-section upcoming-activities">
+                <div class="section-header">
+                    <h2>
+                        <span class="material-symbols-outlined">celebration</span>
+                        Upcoming Activities
+                    </h2>
+                    <span class="count-badge">2</span>
+                </div>
+
+                <div class="card activity-card">
+                    <div class="card-header">
+                        <div>
+                            <h3>Tech Fest 2025</h3>
+                            <p class="subtitle">Technical Club</p>
+                        </div>
+                        <span class="badge college">College-wide</span>
+                    </div>
+                    <div class="card-footer">
+                        <div class="info-item">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            28/10/2025
+                        </div>
+                        <div class="info-item">
+                            <span class="material-symbols-outlined">schedule</span>
+                            10:00 AM - 05:00 PM
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card activity-card">
+                    <div class="card-header">
+                        <div>
+                            <h3>Hackathon 2025</h3>
+                            <p class="subtitle">Technical Club</p>
+                        </div>
+                        <span class="badge college">College-wide</span>
+                    </div>
+                     <div class="card-footer">
+                        <div class="info-item">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            TBA
+                        </div>
+                         <div class="info-item">
+                            <span class="material-symbols-outlined">schedule</span>
+                            TBA
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <div style="height: 50px;"></div>
+
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <span class="material-symbols-outlined">home</span>
+                Home
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-outlined">playlist_add_check</span>
+                Record
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-outlined">groups</span>
+                Students
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-outlined">bar_chart</span>
+                Analytics
+            </a>
+        </nav>
+
+    </div>
+
+</body>
+</html>
