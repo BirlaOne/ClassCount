@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Secure Login</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>College Login</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen">
 
   <div class="bg-white shadow-xl rounded-2xl p-8 w-96">
-    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Login / Register</h2>
+    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Secure Login</h2>
 
-    <form id="auth-form" class="space-y-4">
+    <form id="login-form" class="space-y-4">
       <div>
         <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
         <input id="email" type="email" required
@@ -25,74 +25,63 @@
           class="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 outline-none">
       </div>
 
-      <div class="flex justify-between items-center">
-        <button id="login-btn" type="button"
-          class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Login</button>
-        <button id="signup-btn" type="button"
-          class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">Register</button>
-      </div>
+      <button type="submit"
+        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+        Login
+      </button>
     </form>
 
     <p id="error" class="text-red-500 text-center mt-4 hidden"></p>
   </div>
 
   <script>
+    // ⚙️ Replace with your Supabase Project details
     const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
     const SUPABASE_ANON_KEY = "YOUR_ANON_KEY";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+    const form = document.getElementById('login-form');
     const errorBox = document.getElementById('error');
 
-    async function syncUser(authUser) {
-      if (!authUser) return;
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-      // Check if user already exists in 'users' table
-      const { data: existing } = await supabase
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+
+      // 🔑 Supabase Auth login
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        errorBox.textContent = "Invalid email or password.";
+        errorBox.classList.remove("hidden");
+        return;
+      }
+
+      const user = data.user;
+
+      // ✅ Verify that this user exists in users table (with matching auth_id)
+      const { data: userRow } = await supabase
         .from('users')
-        .select('id')
-        .eq('auth_id', authUser.id)
-        .maybeSingle();
+        .select('*')
+        .eq('auth_id', user.id)
+        .single();
 
-      if (!existing) {
-        // Insert user record linked with auth_id
-        await supabase.from('users').insert({
-          auth_id: authUser.id,
-          mail: authUser.email,
-          name: authUser.email.split('@')[0],
-          role: 'student',
-          course: 'unknown'
-        });
+      if (!userRow) {
+        errorBox.textContent = "User not registered in system.";
+        errorBox.classList.remove("hidden");
+        return;
       }
-    }
 
-    document.getElementById('login-btn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
+      // ✅ Save session info
+      sessionStorage.setItem('user', JSON.stringify(userRow));
 
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        errorBox.textContent = error.message;
-        errorBox.classList.remove('hidden');
-      } else {
-        await syncUser(data.user);
-        window.location.href = 'index.html';
-      }
-    });
-
-    document.getElementById('signup-btn').addEventListener('click', async () => {
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
-
-      const { data, error } = await supabase.auth.signUp({ email, password });
-      if (error) {
-        errorBox.textContent = error.message;
-        errorBox.classList.remove('hidden');
-      } else {
-        await syncUser(data.user);
-        alert('Registration successful! Please login.');
-      }
+      // Redirect
+      window.location.href = "dashboard.html";
     });
   </script>
-
 </body>
 </html>
