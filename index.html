@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <style>
+        /* -------------------
+         * Global Reset & Setup
+         * ------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0e5ec; /* Background for desktop view */
+            color: #1a202c;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* -------------------
+         * Icon Styling
+         * ------------------- */
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24;
+            vertical-align: middle;
+            font-size: 20px;
+        }
+
+        /* -------------------
+         * App Layout
+         * ------------------- */
+        .app-container {
+            width: 100%;
+            min-height: 100vh; /* Use min-height for full screen */
+            display: flex;
+            flex-direction: column;
+            /* Page background is light gray */
+            background-color: #f4f7fa; 
+            position: relative;
+            overflow: hidden; /* Hide overflow */
+        }
+
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto; /* Allow content to scroll */
+            padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
+            
+            /* --- Hide scrollbar --- */
+            scrollbar-width: none; /* For Firefox */
+            -ms-overflow-style: none; /* For IE and Edge */
+        }
+        
+        /* For Chrome, Safari, and Opera */
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+        /* --- End Hide scrollbar --- */
+        
+        /* General Card Style */
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+            border: 1px solid #f1f1f1;
+        }
+        
+        .card-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 16px;
+            color: #475569;
+        }
+
+        /* -------------------
+         * Header (Student Profile)
+         * ------------------- */
+        header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.2;
+        }
+
+        header p {
+            font-size: 16px;
+            color: #718096;
+            font-weight: 500;
+        }
+        
+        /* -------------------
+         * Dashboard Stats Grid
+         * ------------------- */
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .stat-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+            border: 1px solid #f1f1f1;
+        }
+        
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #475569;
+            margin-bottom: 12px;
+        }
+        
+        /* Icon Colors */
+        .stat-card.attendance .material-symbols-outlined { color: #16a34a; }
+        .stat-card.score .material-symbols-outlined { color: #4f46e5; }
+        .stat-card.activities .material-symbols-outlined { color: #0ea5e9; }
+        .stat-card.roles .material-symbols-outlined { color: #f59e0b; }
+        
+        .stat-card-main {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.1;
+        }
+        
+        .stat-card-sub {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+        
+        .badge-excel {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 16px;
+            background-color: #f0fdf4;
+            color: #16a34a;
+            margin-top: 8px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        
+        .progress-bar .progress {
+            height: 100%;
+            background-color: #4f46e5;
+            border-radius: 4px;
+        }
+        .stat-card.attendance .progress {
+            background-color: #16a34a;
+        }
+
+        /* -------------------
+         * Your Roles Card
+         * ------------------- */
+        .tag {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: 16px;
+            background-color: #eef2ff;
+            color: #4338ca;
+            display: inline-block;
+        }
+        
+        /* -------------------
+         * Score Breakdown Card
+         * ------------------- */
+         .breakdown-row {
+             margin-bottom: 16px;
+         }
+         .breakdown-row:last-child {
+             margin-bottom: 0;
+         }
+         
+         .breakdown-header {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             font-size: 14px;
+             margin-bottom: 8px;
+         }
+         
+         .breakdown-label {
+             font-weight: 500;
+             color: #475569;
+         }
+         
+         .breakdown-score {
+             font-weight: 600;
+             color: #1a202c;
+         }
+         
+         .breakdown-bar-bg {
+            width: 100%;
+            height: 10px;
+            background-color: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+         }
+         
+         .breakdown-bar {
+             height: 100%;
+             border-radius: 5px;
+             background-color: #4f46e5;
+         }
+         
+         .breakdown-row.light .breakdown-bar {
+             background-color: #a5b4fc;
+         }
+        
+
+        /* -------------------
+         * Bottom Navigation (NEW)
+         * ------------------- */
+        .bottom-nav {
+            position: absolute; 
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffff; 
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 10px 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid #e2e8f0;
+            
+            /* No top rounded corners */
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #718096; /* Inactive color */
+            font-size: 12px;
+            font-weight: 500;
+            /* Make items spread out */
+            flex: 1; 
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 26px;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #4f46e5; /* Active color */
+        }
+        .nav-item.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        
+        /* -------------------
+         * Mobile-Friendly Media Query
+         * ------------------- */
+         
+        /* On screens 500px or wider (desktops), simulate a phone */
+        @media (min-width: 500px) {
+            body {
+                /* Center the app on desktop */
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 16px 0;
+            }
+            
+            .app-container {
+                /* Constrain the width and height */
+                max-width: 450px;
+                height: 95vh;
+                max-height: 850px;
+                
+                /* Add rounded corners and shadow */
+                border-radius: 24px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+                border: 1px solid #f8f9fa;
+            }
+            
+            .bottom-nav {
+                /* Add rounded corners to match the app container */
+                border-bottom-left-radius: 24px;
+                border-bottom-right-radius: 24px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <main class="main-content">
+
+            <header>
+                <h1>Rahul Sharma</h1>
+                <p>ST2025001 • CS 2025</p>
+            </header>
+
+            <section class="dash-grid">
+                <div class="stat-card attendance">
+                    <div class="stat-card-header">
+                        <span class="material-symbols-outlined">school</span>
+                        Attendance
+                    </div>
+                    <div class="stat-card-main">92%</div>
+                    <div class="progress-bar">
+                        <div class="progress" style="width: 92%;"></div>
+                    </div>
+                </div>
+                
+                <div class="stat-card score">
+                    <div class="stat-card-header">
+                        <span class="material-symbols-outlined">trending_up</span>
+                        Academic Score
+                    </div>
+                    <div class="stat-card-main">85</div>
+                    <div class="badge-excel">Excellent</div>
+                </div>
+                
+                <div class="stat-card activities">
+                    <div class="stat-card-header">
+                        <span class="material-symbols-outlined">calendar_month</span>
+                        Activities
+                    </div>
+                    <div class="stat-card-main">12</div>
+                    <div class="stat-card-sub">Score: 24/30</div>
+                </div>
+                
+                <div class="stat-card roles">
+                    <div class="stat-card-header">
+                        <span class="material-symbols-outlined">person</span>
+                        Roles
+                    </div>
+                    <div class="stat-card-main">1</div>
+                    <div class="stat-card-sub">Score: 5/20</div>
+                </div>
+            </section>
+            
+            <div class="card roles-card">
+                <div class="card-title">Your Roles</div>
+                <div class="tag">CR</div>
+            </div>
+            
+            <div class="card breakdown-card">
+                <div class="card-title">Score Breakdown</div>
+                
+                <div class="breakdown-row">
+                    <div class="breakdown-header">
+                        <span class="breakdown-label">Lecture Attendance (50%)</span>
+                        <span class="breakdown-score">46/50</span>
+                    </div>
+                    <div class="breakdown-bar-bg">
+                        <div class="breakdown-bar" style="width: 92%;"></div>
+                    </div>
+                </div>
+                
+                <div class="breakdown-row">
+                    <div class="breakdown-header">
+                        <span class="breakdown-label">Activities (30 max)</span>
+                        <span class="breakdown-score">24/30</span>
+                    </div>
+                    <div class="breakdown-bar-bg">
+                        <div class="breakdown-bar" style="width: 80%;"></div>
+                    </div>
+                </div>
+                
+                <div class="breakdown-row light">
+                    <div class="breakdown-header">
+                        <span class="breakdown-label">Roles (20 max)</span>
+                        <span class="breakdown-score">5/20</span>
+                    </div>
+                    <div class="breakdown-bar-bg">
+                        <div class="breakdown-bar" style="width: 25%;"></div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div style="height: 50px;"></div>
+
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <span class="material-symbols-outlined">dashboard</span>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item">
+                <span class="material-symbols-outlined">history</span>
+                History
+            </a>
+        </nav>
+
+    </div>
+
+</body>
+</html>
