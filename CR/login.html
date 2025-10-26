@@ -1,87 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>College Login</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.3/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-
-  <div class="bg-white shadow-xl rounded-2xl p-8 w-96">
-    <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Secure Login</h2>
-
-    <form id="login-form" class="space-y-4">
-      <div>
-        <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
-        <input id="email" type="email" required
-          class="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 outline-none">
-      </div>
-
-      <div>
-        <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-        <input id="password" type="password" required
-          class="w-full mt-1 p-2 border border-gray-300 rounded-lg focus:ring focus:ring-blue-200 outline-none">
-      </div>
-
-      <button type="submit"
-        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
-        Login
-      </button>
-    </form>
-
-    <p id="error" class="text-red-500 text-center mt-4 hidden"></p>
-  </div>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure Login</title>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    // ⚙️ Replace with your Supabase Project details
-    const SUPABASE_URL = "https://qbtxcpyjceemqdqipcdd.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const supabase = supabase.createClient(
+      "https://YOUR_PROJECT_ID.supabase.co",
+      "YOUR_PUBLIC_ANON_KEY"
+    );
 
-    const form = document.getElementById('login-form');
-    const errorBox = document.getElementById('error');
+    async function loginUser() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value.trim();
-
-      // 🔑 Supabase Auth login
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
       });
 
       if (error) {
-        errorBox.textContent = "Invalid email or password.";
-        errorBox.classList.remove("hidden");
+        alert("Login failed: " + error.message);
         return;
       }
 
       const user = data.user;
-
-      // ✅ Verify that this user exists in users table (with matching auth_id)
-      const { data: userRow } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_id', user.id)
-        .single();
-
-      if (!userRow) {
-        errorBox.textContent = "User not registered in system.";
-        errorBox.classList.remove("hidden");
+      if (!user) {
+        alert("Invalid login.");
         return;
       }
 
-      // ✅ Save session info
-      sessionStorage.setItem('user', JSON.stringify(userRow));
+      // Check if user exists in 'users' table
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("auth_id", user.id)
+        .single();
 
-      // Redirect
+      if (userError || !userData) {
+        await supabase.auth.signOut();
+        alert("User not registered in system.");
+        return;
+      }
+
+      alert("Login successful!");
+      // redirect to dashboard or secure page
       window.location.href = "dashboard.html";
-    });
+    }
   </script>
+</head>
+<body class="bg-gray-100 flex justify-center items-center h-screen">
+  <div class="bg-white p-6 rounded-xl shadow-lg w-80">
+    <h2 class="text-2xl font-bold text-center mb-4">Login</h2>
+    <input type="email" id="email" placeholder="Email"
+      class="border w-full p-2 mb-3 rounded" />
+    <input type="password" id="password" placeholder="Password"
+      class="border w-full p-2 mb-3 rounded" />
+    <button onclick="loginUser()"
+      class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full">
+      Login
+    </button>
+  </div>
 </body>
 </html>
