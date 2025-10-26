@@ -83,6 +83,7 @@
         .single();
 
       if (error || !user) {
+        console.log("Fetched user:", user, "Error:", error);
         msg.textContent = "User not registered in system.";
         return;
       }
