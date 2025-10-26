@@ -171,13 +171,12 @@
             transform: scale(0.98);
         }
         
-        /* --- NEW: Message Area --- */
+        /* --- Message Area --- */
         #message {
             text-align: center;
             font-size: 14px;
             font-weight: 500;
             margin-top: 16px;
-            /* Reserve space to prevent layout jump */
             min-height: 1.2em;  
         }
         
@@ -242,14 +241,15 @@
                 </div>
             
                 <form onsubmit="login(); return false;">
+                    
                     <div class="form-group">
-                        <label for="identifier">
-                            <span class="material-symbols-outlined">person</span>
-                            Student ID or Email
+                        <label for="email">
+                            <span class="material-symbols-outlined">mail</span>
+                            Email
                         </label>
                         <div class="input-with-icon">
-                            <input type="text" id="identifier" placeholder="Student ID or Email">
-                            <span class="material-symbols-outlined icon">person</span>
+                            <input type="email" id="email" placeholder="your@email.com">
+                            <span class="material-symbols-outlined icon">mail</span>
                         </div>
                     </div>
                     
@@ -267,7 +267,6 @@
                     <button type="submit" class="submit-btn">Login</button>
                     
                     <p id="message"></p>
-                    
                     
                 </form>
             </div>
@@ -287,8 +286,10 @@
         // Initialize Supabase
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // --- 🚀 SIMPLIFIED LOGIN FUNCTION ---
         async function login() {
-          const idOrEmail = document.getElementById("identifier").value.trim();
+          // MODIFIED: Changed variable name
+          const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password").value.trim();
           const msg = document.getElementById("message");
           
@@ -296,71 +297,40 @@
           msg.textContent = "";
           msg.className = "";
 
-          if (!idOrEmail || !password) {
+          // MODIFIED: Updated check
+          if (!email || !password) {
             msg.className = "error";
-            msg.textContent = "Please enter both ID/Email and Password.";
+            msg.textContent = "Please enter both Email and Password.";
             return;
           }
 
-          // 1. Determine if the input is an ID or an Email
-          // We assume an ID is numeric and doesn't contain "@"
-          let queryColumn = 'mail';
-          let queryValue = idOrEmail;
+          // 🔍 Step 1: REMOVED
+          // We no longer need to search the 'users' table first.
 
-          if (!isNaN(idOrEmail) && !idOrEmail.includes('@')) {
-              queryColumn = 'id';
-              queryValue = parseInt(idOrEmail);
-          }
-
-          // 🔍 Step 1: Find the user in your custom 'users' table
-          // We only select the columns we absolutely need: 'mail' and 'auth_id'
-          const { data: user, error: fetchError } = await supabase
-            .from("users")
-            .select("mail, auth_id") 
-            .eq(queryColumn, queryValue)
-            .maybeSingle();
-
-          if (fetchError) {
-            msg.className = "error";
-            msg.textContent = "An error occurred. Please try again.";
-            console.error("Fetch user error:", fetchError.message);
-            return;
-          }
-
-          // 🛡️ SECURITY: Generic error for user not found
-          if (!user) {
-            msg.className = "error";
-            msg.textContent = "Invalid ID/Email or Password.";
-            return;
-          }
-
-          // 🔐 Step 2: Authenticate via Supabase Auth
-          // We use the email ('user.mail') we found from our 'users' table
-          const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email: user.mail,
+          // 🔐 Step 2: Authenticate directly with Supabase Auth
+          // This one function handles everything.
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: email,
             password: password
           });
 
-          // 🛡️ SECURITY: Generic error for wrong password
-          if (authError) {
+          if (error) {
             msg.className = "error";
-            msg.textContent = "Invalid ID/Email or Password.";
-            console.error("Auth error:", authError.message);
+            // This single error message handles both "user not found"
+            // and "wrong password" for better security.
+            msg.textContent = "Invalid email or password.";
+            console.error("Auth error:", error.message);
             return;
           }
 
-          // ✅ Step 3: Sanity check (optional but good)
-          // Verify the authenticated user's ID matches the one in our table
-          if (authData.user.id !== user.auth_id) {
-            msg.className = "error";
-            msg.textContent = "User data mismatch. Please contact admin.";
-            console.error("CRITICAL: Auth ID and user.auth_id do not match!");
-            return;
-          }
+          // ✅ Step 3: REMOVED
+          // The cross-check is no longer needed. If login is
+          // successful, we trust Supabase.
 
           // 🎉 Success
           msg.className = "success";
           msg.textContent = "Login successful! Redirecting...";
+          console.log("Logged in user:", data.user);
 
           // Redirect to the main app page (e.g., index.html)
           setTimeout(() => {
