@@ -5,36 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Secure Login</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    // Initialize Supabase FIRST before any usage
-    const SUPABASE_URL = "https://qbtxcpyjceemqdqipcdd.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  </script>
-
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f7f7f7;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f0f2f5;
       height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .login-box {
-      background: white;
-      padding: 30px;
+      background: #fff;
+      padding: 30px 25px;
       border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 300px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      width: 320px;
       text-align: center;
+    }
+    .login-box h2 {
+      margin-bottom: 20px;
+      color: #222;
     }
     input {
       width: 90%;
       padding: 10px;
-      margin: 10px 0;
-      border-radius: 6px;
+      margin: 8px 0;
       border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
     }
     button {
       width: 95%;
@@ -42,76 +40,107 @@
       background-color: #007bff;
       border: none;
       color: white;
+      font-weight: 600;
       border-radius: 6px;
       cursor: pointer;
+      margin-top: 10px;
     }
     button:hover {
       background-color: #0056b3;
     }
-    .msg {
+    #message {
+      margin-top: 12px;
       color: red;
-      margin-top: 10px;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
+
   <div class="login-box">
-    <h2>Login</h2>
-    <input type="text" id="student_id" placeholder="Enter Student ID">
-    <input type="password" id="password" placeholder="Enter Password">
+    <h2>College Login</h2>
+    <input type="text" id="identifier" placeholder="Student ID or Email" />
+    <input type="password" id="password" placeholder="Password" />
     <button onclick="login()">Login</button>
-    <p class="msg" id="message"></p>
+    <p id="message"></p>
   </div>
 
   <script>
+    // 🔧 Initialize Supabase FIRST
+    const SUPABASE_URL = "https://qbtxcpyjceemqdqipcdd.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     async function login() {
-      const id = document.getElementById("student_id").value.trim();
+      const idOrEmail = document.getElementById("identifier").value.trim();
       const password = document.getElementById("password").value.trim();
       const msg = document.getElementById("message");
+      msg.style.color = "red";
       msg.textContent = "";
 
-      if (!id || !password) {
-        msg.textContent = "Please enter ID and password.";
+      if (!idOrEmail || !password) {
+        msg.textContent = "Please enter Student ID or Email and Password.";
         return;
       }
 
-      // Fetch user record using ID
-      const { data: user, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("id", id)
-        .single();
+      // 🔍 Step 1: Try to find user by ID or email
+      let user = null;
+      let error = null;
 
-      if (error || !user) {
-        console.log("Fetched user:", user, "Error:", error);
+      // Try by numeric ID first
+      if (!isNaN(idOrEmail)) {
+        const { data: byId, error: idError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", parseInt(idOrEmail))
+          .maybeSingle();
+        user = byId;
+        error = idError;
+      }
+
+      // If not found, try by email
+      if (!user && !error) {
+        const { data: byEmail, error: mailError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("mail", idOrEmail)
+          .maybeSingle();
+        user = byEmail;
+        error = mailError;
+      }
+
+      console.log("Fetched user:", user, "Error:", error);
+
+      if (!user) {
         msg.textContent = "User not registered in system.";
         return;
       }
 
-      // Authenticate via Supabase Auth using user's mail and password
+      // 🔐 Step 2: Authenticate via Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: user.mail,
         password: password
       });
 
       if (authError) {
-        msg.textContent = "Invalid credentials.";
-        console.error(authError);
+        msg.textContent = "Invalid credentials. Please try again.";
+        console.error("Auth error:", authError);
         return;
       }
 
-      // Check if auth_id matches user record
+      // ✅ Step 3: Verify Auth UID matches users.auth_id
       if (authData.user.id !== user.auth_id) {
         msg.textContent = "User mismatch. Contact admin.";
         return;
       }
 
+      // 🎉 Success
       msg.style.color = "green";
       msg.textContent = "Login successful! Redirecting...";
 
-      // Redirect to dashboard (or any other page)
+      // Example redirect (you can change)
       setTimeout(() => {
-        window.location.href = "index.html";
+        window.location.href = "dashboard.html";
       }, 1000);
     }
   </script>
