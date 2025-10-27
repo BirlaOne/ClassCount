@@ -1,942 +1,984 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mark Attendance</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
-    <style>
-        /* -------------------
-         * Global Reset & Setup
-         * ------------------- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        html, body {
-            height: 100%;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #e0e5ec;
-            color: #1a202c;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-            vertical-align: middle;
-            font-size: 20px;
-        }
+    <style>
+        /* -------------------
+         * Global Reset & Setup
+         * ------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0e5ec;
+            color: #1a202c;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+            font-size: 20px;
+        }
 
-        /* -------------------
-         * App Layout
-         * ------------------- */
-        .app-container {
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            background-color: #ffffff;
-        }
-        .main-content {
-            flex-grow: 1; 
-            overflow-y: auto; 
-            padding: 24px 20px 180px 20px; 
-            scrollbar-width: none; 
-            -ms-overflow-style: none; 
-        }
-        .main-content::-webkit-scrollbar { display: none; }
+        /* -------------------
+         * App Layout
+         * ------------------- */
+        .app-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff;
+        }
+        .main-content {
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 24px 20px 180px 20px; 
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
+        }
+        .main-content::-webkit-scrollbar { display: none; }
 
-        /* -------------------
-         * Header
-         * ------------------- */
-        header {
-            padding: 24px 20px 20px 20px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .header-top {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-        .header-top .back-btn {
-            font-size: 28px;
-            font-variation-settings: 'wght' 500;
-            cursor: pointer;
-        }
-        .header-top h1 {
-            font-size: 24px;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-        .header-bottom {
-            display: flex;
-            gap: 16px;
-            font-size: 14px;
-            color: #475569;
-            font-weight: 500;
-        }
-        .header-bottom .info-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .header-bottom .info-item .material-symbols-outlined {
-            font-size: 18px;
-        }
+        /* -------------------
+         * Header
+         * ------------------- */
+        header {
+            padding: 24px 20px 20px 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .header-top .back-btn {
+            font-size: 28px;
+            font-variation-settings: 'wght' 500;
+            cursor: pointer;
+        }
+        .header-top h1 {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .header-bottom {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: #475569;
+            font-weight: 500;
+        }
+        .header-bottom .info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-bottom .info-item .material-symbols-outlined {
+            font-size: 18px;
+        }
 
-        /* -------------------
-         * Toggle Switch
-         * ------------------- */
-        .toggle-switch {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            background-color: #f1f5f9;
-            border-radius: 12px;
-            padding: 4px;
-            margin-bottom: 20px;
-        }
-        .toggle-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px;
-            border: none;
-            border-radius: 9px;
-            background-color: transparent;
-            color: #475569;
-            font-size: 14px;
-            font-weight: 600;
-            font-family: 'Inter', sans-serif;
-            cursor: pointer;
-        }
-        .toggle-btn.active {
-            background-color: #ffffff;
-            color: #4f46e5;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-        .toggle-btn .material-symbols-outlined {
-            font-size: 18px;
-            font-variation-settings: 'wght' 500;
-        }
-        
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        /* -------------------
+         * Toggle Switch
+         * ------------------- */
+        .toggle-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background-color: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border: none;
+            border-radius: 9px;
+            background-color: transparent;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+        }
+        .toggle-btn.active {
+            background-color: #ffffff;
+            color: #4f46e5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .toggle-btn .material-symbols-outlined {
+            font-size: 18px;
+            font-variation-settings: 'wght' 500;
+        }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        /* -------------------
-         * Manual Entry: Search
-         * ------------------- */
-        .search-bar {
-            position: relative;
-            margin-bottom: 20px;
-        }
-        .search-bar .icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-            font-size: 22px;
-        }
-        .search-bar input {
-            width: 100%;
-            padding: 12px 16px 12px 48px;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            background-color: #ffffff;
-            font-size: 16px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            color: #1a202c;
-        }
-        .search-bar input:focus {
-            outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
+        /* -------------------
+         * Manual Entry: Search
+         * ------------------- */
+        .search-bar {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-bar .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 22px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 12px 16px 12px 48px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background-color: #ffffff;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            color: #1a202c;
+        }
+        .search-bar input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
 
-        /* -------------------
-         * Manual Entry: Student List
-         * ------------------- */
-        .student-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .student-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 16px;
-            background-color: #ffffff;
-            border: 1px solid #f1f5f9;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(149, 157, 165, 0.05);
-        }
-        .student-item .student-name {
-            font-size: 16px;
-            font-weight: 600;
-            color: #1a202c;
-        }
+        /* -------------------
+         * Manual Entry: Student List
+         * ------------------- */
+        .student-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background-color: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(149, 157, 165, 0.05);
+        }
+        .student-item .student-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
 
-        /* Custom Checkbox */
-        .student-item input[type="checkbox"] {
-            appearance: none;
-            -webkit-appearance: none;
-            width: 24px;
-            height: 24px;
-            background-color: #f1f5f9;
-            border-radius: 50%;
-            border: 2px solid #e2e8f0;
-            cursor: pointer;
-            position: relative;
-            transition: all 0.2s ease;
-        }
-        .student-item input[type="checkbox"]:checked {
-            background-color: #4f46e5;
-            border-color: #4f46e5;
-        }
-        .student-item input[type="checkbox"]:checked::after {
-            content: '\e5ca';
-            font-family: 'Material Symbols Outlined';
-            font-weight: normal;
-            font-style: normal;
-            font-size: 16px;
-            display: inline-block;
-            line-height: 1;
-            text-transform: none;
-            letter-spacing: normal;
-            word-wrap: normal;
-            white-space: nowrap;
-            direction: ltr;
-            -webkit-font-smoothing: antialiased;
-            color: white;
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            font-variation-settings: 'wght' 700;
-        }
+        /* Custom Checkbox */
+        .student-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background-color: #f1f5f9;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .student-item input[type="checkbox"]:checked {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+        .student-item input[type="checkbox"]:checked::after {
+            content: '\e5ca';
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 16px;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
+            color: white;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-variation-settings: 'wght' 700;
+        }
 
-        /* -------------------
-         * QR Scanner Tab
-         * ------------------- */
-        .qr-scanner-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 30px 10px;
-            border: 1px solid #f1f5f9;
-            border-radius: 12px;
-            background-color: #ffffff;
-            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
-        }
-        .qr-scanner-content .qr-icon-wrapper {
-            width: 120px;
-            height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-        }
-        .qr-scanner-content .qr-icon {
-            font-size: 80px;
-            color: #4f46e5;
-        }
-        .qr-scanner-content p {
-            font-size: 14px;
-            color: #475569;
-            margin-top: 20px;
-            font-weight: 500;
-        }
-        .simulate-scan-btn { 
-            width: 100%;
-            max-width: 250px;
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            background-color: #22c55e;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 20px;
-        }
-        .simulate-scan-btn:active {
-            transform: scale(0.98);
-        }
-        .qr-scanner-content .scanned-count {
-            margin-top: 16px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #1a202c;
-        }
+        /* -------------------
+         * QR Scanner Tab
+         * ------------------- */
+        .qr-scanner-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 30px 10px;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            background-color: #ffffff;
+            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+        }
+        .qr-scanner-content .qr-icon-wrapper {
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+        .qr-scanner-content .qr-icon {
+            font-size: 80px;
+            color: #4f46e5;
+        }
+        .qr-scanner-content p {
+            font-size: 14px;
+            color: #475569;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+        .simulate-scan-btn { /* Renamed to "Open Scanner" in JS */
+            width: 100%;
+            max-width: 250px;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background-color: #22c55e;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 20px;
+        }
+        .simulate-scan-btn:active {
+            transform: scale(0.98);
+        }
+        .qr-scanner-content .scanned-count {
+            margin-top: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1a202c;
+        }
 
 
-        /* -------------------
-         * Fixed Submit Button
-         * ------------------- */
-        .submit-footer {
-            position: fixed;
-            bottom: 80px; 
-            left: 0;
-            right: 0;
-            padding: 16px 20px;
-            background-image: linear-gradient(to top, #ffffff 70%, rgba(255,255,250,0));
-            z-index: 900;
-        }
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .submit-btn:disabled {
-            background-image: none;
-            background-color: #cbd5e1;
-            cursor: wait;
-        }
+        /* -------------------
+         * Fixed Submit Button
+         * ------------------- */
+        .submit-footer {
+            position: fixed;
+            bottom: 80px; 
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            background-image: linear-gradient(to top, #ffffff 70%, rgba(255,255,250,0));
+            z-index: 900;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .submit-btn:disabled {
+            background-image: none;
+            background-color: #cbd5e1;
+            cursor: wait;
+        }
 
-        /* -------------------
-         * Bottom Navigation
-         * ------------------- */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #ffffff; 
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0 10px 0;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-            border-top: 1px solid #e2e8f0;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            z-index: 1000;
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #718096; 
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .nav-item .material-symbols-outlined {
-            font-size: 26px;
-            margin-bottom: 2px;
-        }
-        .nav-item.active { color: #4f46e5; }
-        .nav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
-        
-        /* -------------------
-         * Toast Notification
-         * ------------------- */
-        .toast {
-            visibility: hidden;
-            opacity: 0;
-            position: fixed; 
-            bottom: 100px; 
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 6000; /* <-- CHANGED: Was 2000, now higher than modal */
-            transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
-            white-space: nowrap;
-        }
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 110px; 
-        }
-        
-        /* -------------------
-         * QR Scanner Modal
-         * ------------------- */
-        .scanner-modal {
-            display: none;
-            position: fixed;
-            z-index: 5000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-        }
-        .scanner-modal .scanner-backdrop {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.6);
-            backdrop-filter: blur(5px);
-        }
-        .scanner-modal .scanner-content {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #ffffff;
-            padding: 24px;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-        }
-        .scanner-modal .scanner-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .scanner-modal .scanner-header h2 {
-            font-size: 18px;
-            font-weight: 600;
-        }
-        .scanner-modal .scanner-close-btn {
-            font-size: 28px;
-            color: #718096;
-            cursor: pointer;
-            line-height: 1;
-        }
-        #qr-reader {
-            width: 100%;
-            border-radius: 12px;
-            overflow: hidden;
-            border: 1px solid #e2e8f0;
-        }
-        
-        /* -------------------
-         * Desktop Media Query
-         * ------------------- */
-        @media (min-width: 500px) {
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 16px 0;
-            }
-            .app-container {
-                max-width: 450px;
-                height: 95vh;
-                max-height: 850px;
-                border-radius: 24px;
-                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-                border: 1px solid #f8f9fa;
-                position: relative; 
-                overflow: hidden; 
-            }
-            .bottom-nav {
-                border-bottom-left-radius: 24px;
-                border-bottom-right-radius: 24px;
-            }
-            .submit-footer {
-                width: 100%;
-                max-width: 450px;
-                bottom: 80px;
-                border-radius: 24px;
-            }
-            .toast, .scanner-modal {
-                position: absolute; 
-            }
-        }
-    </style>
+        /* -------------------
+         * Bottom Navigation
+         * ------------------- */
+public-supply-gold-healthy-section-know.gif         .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffff; 
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 10px 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid #e2e8f0;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            z-index: 1000;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+    _http:       align-items: center;
+            text-decoration: none;
+            color: #718096; 
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 26px;
+            margin-bottom: 2px;
+        }
+        .nav-item.active { color: #4f46e5; }
+        .nav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+        
+        /* -------------------
+         * Toast Notification
+         * ------------------- */
+        .toast {
+            visibility: hidden;
+            opacity: 0;
+            position: fixed; 
+            bottom: 100px; 
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 2000; 
+            transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
+            white-space: nowrap;
+        }
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 110px; 
+        }
+        
+        /* -------------------
+         * NEW: QR Scanner Modal
+         * ------------------- */
+        .scanner-modal {
+            display: none;
+            position: fixed;
+            z-index: 5000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+        .scanner-modal .scanner-backdrop {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+        .scanner-modal .scanner-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .scanner-modal .scanner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .scanner-modal .scanner-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .scanner-modal .scanner-close-btn {
+            font-size: 28px;
+            color: #718096;
+            cursor: pointer;
+            line-height: 1;
+        }
+        #qr-reader {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        
+        /* -------------------
+         * Desktop Media Query
+         * ------------------- */
+        @media (min-width: 500px) {
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 16px 0;
+            }
+            .app-container {
+                max-width: 450px;
+                height: 95vh;
+TA-pa-b-ok-en.gif                 max-height: 850px;
+                border-radius: 24px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+                border: 1px solid #f8f9fa;
+                position: relative; 
+                overflow: hidden; 
+            }
+            .bottom-nav {
+                border-bottom-left-radius: 24px;
+                border-bottom-right-radius: 24px;
+            }
+            .submit-footer {
+                width: 100%;
+                max-width: 450px;
+                bottom: 80px;
+                border-radius: 24px;
+            }
+            .toast, .scanner-modal {
+                position: absolute; /* Contain modal to app */
+            }
+        }
+    </style>
 </head>
 <body>
 
-    <div class="app-container">
-        
-        <header>
-            <div class="header-top">
-                <span class="material-symbols-outlined back-btn">arrow_back</span>
-                <h1 id="lecture-subject">Loading...</h1>
-            </div>
-            <div class="header-bottom">
-                <div class="info-item">
-                    <span class="material-symbols-outlined">calendar_month</span>
-                    <span id="lecture-date">--/--/----</span>
-                </div>
-                <div class="info-item">
-                    <span class="material-symbols-outlined">schedule</span>
-                    <span id="lecture-time">--:--</span>
-                </div>
-            </div>
-        </header>
-        
-        <main class="main-content">
+    <div class="app-container">
+        
+        <header>
+            <div class="header-top">
+                <span class="material-symbols-outlined back-btn">arrow_back</span>
+                <h1 id="lecture-subject">Loading...</h1>
+            </div>
+            <div class="header-bottom">
+                <div class="info-item">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                    <span id="lecture-date">--/--/----</span>
+                </div>
+                <div class="info-item">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <span id="lecture-time">--:--</span>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
 
-            <div class="toggle-switch">
-                <button class="toggle-btn active" id="btn-manual" data-tab="manual-entry">
-                    <span class="material-symbols-outlined">edit_note</span>
-                    Manual Entry
-                </button>
-                <button class="toggle-btn" id="btn-qr" data-tab="qr-scanner">
-                    <span class="material-symbols-outlined">qr_code_scanner</span>
-                    QR Scanner
-                </button>
-            </div>
+            <div class="toggle-switch">
+                <button class="toggle-btn active" id="btn-manual" data-tab="manual-entry">
+                    <span class="material-symbols-outlined">edit_note</span>
+                    Manual Entry
+              A-pa-b-ok-en.gif   </button>
+                <button class="toggle-btn" id="btn-qr" data-tab="qr-scanner">
+                    <span class="material-symbols-outlined">qr_code_scanner</span>
+                    QR Scanner
+                </button>
+            </div>
 
-            <div id="manual-entry" class="tab-content active">
-                <div class="search-bar">
-                    <span class="material-symbols-outlined icon">search</span>
-                    <input type="text" id="search-input" placeholder="Search by name...">
-                </div>
-                <div class="student-list" id="student-list-container">
-                    </div>
-            </div>
+            <div id="manual-entry" class="tab-content active">
+                <div class="search-bar">
+                    <span class="material-symbols-outlined icon">search</span>
+                    <input type="text" id="search-input" placeholder="Search by name...">
+                </div>
+                <div class="student-list" id="student-list-container">
+                                    </div>
+            </div>
 
-            <div id="qr-scanner" class="tab-content">
-                <div class="qr-scanner-content">
-                    <div class="qr-icon-wrapper">
-                        <span class="material-symbols-outlined qr-icon">qr_code_2</span>
-                    </div>
-                    <p>Open the scanner to mark attendance</p>
-                    <button class="simulate-scan-btn" id="open-scanner-btn">
-                        Open Scanner
-                    </button>
-                    <p class="scanned-count" id="scanned-count">Scanned: 0 students</p>
-                </div>
-            </div>
+            <div id="qr-scanner" class="tab-content">
+                <div class="qr-scanner-content">
+                    <div class="qr-icon-wrapper">
+                        <span class="material-symbols-outlined qr-icon">qr_code_2</span>
+                    </div>
+                    <p>Open the scanner to mark attendance</p>
+S-pa-b-ok-en.gif                   <button class="simulate-scan-btn" id="open-scanner-btn">
+                        Open Scanner
+                    </button>
+Ind-pa-b-ok-en.gif                   <p class="scanned-count" id="scanned-count">Scanned: 0 students</p>
+                </div>
+            </div>
 
-        </main>
+        </main>
 
-        <div class="submit-footer" id="submit-footer">
-            <button class="submit-btn" id="submit-btn">Submit Attendance (0/0)</button>
-        </div>
+        <div class="submit-footer" id="submit-footer">
+            <button class="submit-btn" id="submit-btn">Submit Attendance (0/0)</button>
+        </div>
 
-        <nav class="bottom-nav">
-            <a href="index.html" class="nav-item">
-                <span class="material-symbols-outlined">home</span>
-                Home
-            </a>
-            <a href="record.html" class="nav-item active">
-                <span class="material-symbols-outlined">playlist_add_check</span>
-                Record
-            </a>
-            <a href="students.html" class="nav-item">
-                <span class="material-symbols-outlined">groups</span>
-                Students
-            </a>
-            <a href="analytics.html" class="nav-item">
-                <span class="material-symbols-outlined">bar_chart</span>
-                Analytics
-            </a>
-        </nav>
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="material-symbols-outlined">home</span>
+                Home
+            </a>
+            <a href="record.html" class="nav-item active">
+                <span class="material-symbols-outlined">playlist_add_check</span>
+                Record
+            </a>
+            <a href="students.html" class="nav-item">
+TA-pa-b-ok-en.gif                 <span class="material-symbols-outlined">groups</span>
+                Students
+            </a>
+            <a href="analytics.html" class="nav-item">
+                <span class="material-symbols-outlined">bar_chart</span>
+                Analytics
+            </a>
+        </nav>
 
-        <div id="toast" class="toast">
-            <span id="toast-message">This is a toast message!</span>
-        </div>
+        <div id="toast" class="toast">
+            <span id="toast-message">This is a toast message!</span>
+        </div>
 
-    </div>
-    
-    <div id="scanner-modal" class="scanner-modal">
-        <div class="scanner-backdrop"></div>
-        <div class="scanner-content">
-            <div class="scanner-header">
-                <h2>Scan Student QR Code</h2>
-                <span class="material-symbols-outlined scanner-close-btn" id="scanner-close-btn">close</span>
-            </div>
-            <div id="qr-reader"></div>
-        </div>
-    </div>
-
-
-    <script>
-        // --- 1. SUPABASE SETUP ---
-        const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
-
-        const { createClient } = supabase;
-        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // --- 2. GLOBAL VARIABLES ---
-        let toastTimer;
-        let currentLecture = null;
-        let allStudents = [];
-        let attendanceRecords = new Map();
-        let currentLectureId = null;
-        let scannedStudentCount = 0; 
-        let html5QrCode = null; 
-        let beepSound = null; 
-
-        // --- 3. DOM ELEMENTS ---
-        const toast = document.getElementById('toast');
-        const toastMessage = document.getElementById('toast-message');
-        const studentListContainer = document.getElementById('student-list-container');
-        const searchInput = document.getElementById('search-input');
-        const submitBtn = document.getElementById('submit-btn');
-        const manualTab = document.getElementById('manual-entry');
-        const qrTab = document.getElementById('qr-scanner');
-        const btnManual = document.getElementById('btn-manual');
-        const btnQr = document.getElementById('btn-qr');
-        const submitFooter = document.getElementById('submit-footer');
-        const openScannerBtn = document.getElementById('open-scanner-btn'); 
-        const scannedCountLabel = document.getElementById('scanned-count'); 
-        const scannerModal = document.getElementById('scanner-modal');
-        const scannerCloseBtn = document.getElementById('scanner-close-btn');
-        const qrReaderDiv = document.getElementById('qr-reader');
-
-        // --- 4. CORE FUNCTIONS ---
-
-        function showToast(message, isError = false) {
-            if (toastTimer) clearTimeout(toastTimer);
-            toastMessage.textContent = message;
-            toast.style.backgroundColor = isError ? '#e53e3e' : '#333';
-            toast.classList.add('show');
-            toastTimer = setTimeout(() => {
-                toast.classList.remove('show');
-                toastTimer = null;
-            }, 3000); 
-        }
-
-        // --- Formatting Helpers ---
-        function formatTime(timeString) {
-            if (!timeString) return 'N/A';
-            const [hours, minutes] = timeString.split(':');
-            const d = new Date();
-            d.setHours(parseInt(hours));
-            d.setMinutes(parseInt(minutes));
-            return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-        }
-         function formatDate(dateString) {
-             if (!dateString) return 'N/A';
-             const [year, month, day] = dateString.split('-');
-             return `${day}/${month}/${year}`;
-         }
-
-        /**
-         * Loads all necessary data on page load
-         */
-        async function loadPageData() {
-            try {
-                const params = new URLSearchParams(window.location.search);
-                currentLectureId = params.get('lecture_id');
-                if (!currentLectureId) {
-                    showToast('No lecture ID found!', true);
-                    return;
-                }
-
-                const { data: lecture, error: lectureError } = await _supabase
-                    .from('lectures')
-                    .select('*')
-                    .eq('lecture_id', currentLectureId)
-                    .single();
-                
-                if (lectureError) throw new Error('Could not fetch lecture details.');
-                currentLecture = lecture;
-                updateHeader(lecture);
-
-                const { data: students, error: studentError } = await _supabase
-                    .from('students')
-                    .select('student_id, name') 
-                    .eq('course', lecture.course)
-                    .order('name', { ascending: true });
-
-                if (studentError) throw new Error('Could not fetch students.');
-                allStudents = students;
-
-                const { data: records, error: recordError } = await _supabase
-                    .from('attendance_records')
-                    .select('student_id, status')
-                    .eq('lecture_id', currentLectureId)
-                    .eq('type', 'lecture');
-                
-                if (recordError) throw new Error('Could not fetch attendance records.');
-                
-                attendanceRecords = new Map(records.map(r => [r.student_id, r.status]));
-
-                renderStudentList();
-
-            } catch (error) {
-                console.error('Error loading page data:', error.message);
-                showToast(error.message, true);
-            }
-        }
-
-        function updateHeader(lecture) {
-            document.getElementById('lecture-subject').textContent = lecture.subject_name;
-            document.getElementById('lecture-date').textContent = formatDate(lecture.date);
-            document.getElementById('lecture-time').textContent = 
-                `${formatTime(lecture.start_time)} - ${formatTime(lecture.end_time)}`;
-        }
-
-        function renderStudentList() {
-            studentListContainer.innerHTML = ''; 
-            
-            if (allStudents.length === 0) {
-                studentListContainer.innerHTML = '<p style="text-align:center; color: #718096;">No students found for this course.</p>';
-                return;
-            }
-
-            allStudents.forEach(student => {
-                const isPresent = attendanceRecords.get(student.student_id) === true;
-                
-                const item = document.createElement('div');
-                item.className = 'student-item';
-                item.innerHTML = `
-                    <span class="student-name">${student.name}</span>
-                    <input type="checkbox" 
-                           class="attendance-checkbox" 
-                           data-student-id="${student.student_id}" 
-                           ${isPresent ? 'checked' : ''}>
-                `;
-                studentListContainer.appendChild(item);
-            });
-            
-            updateSubmitButtonCount(); 
-        }
-
-        function updateSubmitButtonCount() {
-            const totalStudents = allStudents.length;
-            const presentStudents = studentListContainer.querySelectorAll('.attendance-checkbox:checked').length;
-            submitBtn.textContent = `Submit Attendance (${presentStudents}/${totalStudents})`;
-        }
-
-        async function handleSubmitAttendance() {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
-
-            const checkboxes = studentListContainer.querySelectorAll('.attendance-checkbox');
-            const recordsToUpsert = [];
-            const now = new Date().toISOString();
-
-            checkboxes.forEach(cb => {
-                recordsToUpsert.push({
-                    student_id: parseInt(cb.dataset.studentId), 
-                    lecture_id: parseInt(currentLectureId), 
-                    type: 'lecture',
-                    status: cb.checked, 
-                    marked_at: now
-                });
-            });
-
-            try {
-                const { error } = await _supabase
-                    .from('attendance_records')
-                    .upsert(recordsToUpsert, {
-                        onConflict: 'student_id, lecture_id, type' 
-                    });
-                
-                if (error) throw error;
-
-                showToast('Attendance submitted successfully! 🎉');
-                
-                recordsToUpsert.forEach(r => attendanceRecords.set(r.student_id, r.status));
-
-            } catch (error) {
-                console.error('Error submitting attendance:', error.message);
-                showToast(`Error: ${error.message}`, true);
-            } finally {
-                submitBtn.disabled = false;
-                updateSubmitButtonCount(); 
-            }
-        }
-
-        function filterStudentList() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const students = studentListContainer.querySelectorAll('.student-item');
-            
-            students.forEach(student => {
-                const name = student.querySelector('.student-name').textContent.toLowerCase();
-                if (name.includes(searchTerm)) {
-                    student.style.display = 'flex';
-                } else {
-                    student.style.display = 'none';
-                }
-            });
-        }
-
-        function switchTab(tabName) {
-            if (tabName === 'manual-entry') {
-                manualTab.classList.add('active');
-                qrTab.classList.remove('active');
-                btnManual.classList.add('active');
-                btnQr.classList.remove('active');
-                submitFooter.style.display = 'block'; 
-            } else if (tabName === 'qr-scanner') {
-                manualTab.classList.remove('active');
-                qrTab.classList.add('active');
-                btnManual.classList.remove('active');
-                btnQr.classList.add('active');
-                submitFooter.style.display = 'none'; 
-                scannedStudentCount = 0;
-                scannedCountLabel.textContent = `Scanned: 0 students`;
-            }
-        }
-
-        /**
-         * CHANGED: Marks a student present and returns a status
-         */
-        function markStudentPresent(studentId) {
-            const student = allStudents.find(s => s.student_id === studentId);
-            
-            if (!student) {
-                showToast(`Student ID ${studentId} not found in this class.`, true);
-                return 'not_found';
-            }
-
-            const checkbox = document.querySelector(`.attendance-checkbox[data-student-id="${studentId}"]`);
-            
-            if (!checkbox) {
-                showToast(`UI Error: Could not find checkbox for ${student.name}`, true);
-                return 'not_found';
-            }
-
-            if (checkbox.checked) {
-                showToast(`${student.name} already marked present.`);
-                return 'already_marked';
-            } else {
-                checkbox.checked = true;
-                showToast(`Scanned: ${student.name} ✅`);
-                updateSubmitButtonCount();
-                return 'newly_marked';
-            }
-        }
-
-        /**
-         * CHANGED: QR Scan Success Callback
-         */
-        function onScanSuccess(decodedText, decodedResult) {
-            const studentId = parseInt(decodedText);
-            
-            if (isNaN(studentId)) {
-                showToast(`Invalid QR. Please scan a valid student ID.`, true);
-                return;
-            }
-
-            // Mark the student
-            const scanStatus = markStudentPresent(studentId);
-            
-            // Only play beep and update count if it's a *new* scan
-            if (scanStatus === 'newly_marked') {
-                beepSound.play();
-                scannedStudentCount++;
-                scannedCountLabel.textContent = `Scanned: ${scannedStudentCount} students`;
-            }
-        }
-
-        function onScanFailure(error) {
-            // console.warn(`QR scan error: ${error}`);
-        }
-
-        function closeScanner() {
-            try {
-                if (html5QrCode && html5QrCode.isScanning) {
-                    html5QrCode.stop();
-                }
-            } catch (err) {
-                console.error("Error stopping scanner: ", err);
-            }
-            scannerModal.style.display = 'none';
-            switchTab('manual-entry');
-        }
+    </div>
+    
+    <div id="scanner-modal" class="scanner-modal">
+        <div class="scanner-backdrop"></div>
+        <div class="scanner-content">
+            <div class="scanner-header">
+                <h2>Scan Student QR Code</h2>
+                <span class="material-symbols-outlined scanner-close-btn" id="scanner-close-btn">close</span>
+Read-pa-b-ok-en.gif           </div>
+            <div id="qr-reader"></div>
+        </div>
+    </div>
 
 
-        // --- 5. EVENT LISTENERS ---
+    <script>
+        // --- 1. SUPABASE SETUP ---
+        const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadPageData();
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            // Initialize Scanner & Beep
-            html5QrCode = new Html5Qrcode("qr-reader");
-            
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            beepSound = {
-                play: () => {
-                    const oscillator = audioContext.createOscillator();
-                    const gainNode = audioContext.createGain();
-                    oscillator.connect(gainNode);
-                    gainNode.connect(audioContext.destination);
-                    
-                    oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); 
-                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime); 
-                    
-                    oscillator.start();
-                    oscillator.stop(audioContext.currentTime + 0.1); 
-                }
-            };
-        });
+        // --- 2. GLOBAL VARIABLES ---
+        let toastTimer;
+        let currentLecture = null;
+        let allStudents = [];
+        let attendanceRecords = new Map();
+        let currentLectureId = null;
+        let scannedStudentCount = 0; 
+        let html5QrCode = null; // <-- NEW: For scanner instance
+        let beepSound = null; // <-- NEW: For audio
+        let audioContext = null; // <-- NEW: Audio Context
 
-        document.querySelector('.back-btn').addEventListener('click', () => {
-            window.history.back(); 
-        });
+        // --- 3. DOM ELEMENTS ---
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const studentListContainer = document.getElementById('student-list-container');
+        const searchInput = document.getElementById('search-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const manualTab = document.getElementById('manual-entry');
+        const qrTab = document.getElementById('qr-scanner');
+        const btnManual = document.getElementById('btn-manual');
+        const btnQr = document.getElementById('btn-qr');
+        const submitFooter = document.getElementById('submit-footer');
+        const openScannerBtn = document.getElementById('open-scanner-btn'); // <-- RENAMED
+        const scannedCountLabel = document.getElementById('scanned-count'); 
+        // --- NEW: Modal Elements ---
+        const scannerModal = document.getElementById('scanner-modal');
+        const scannerCloseBtn = document.getElementById('scanner-close-btn');
+        const qrReaderDiv = document.getElementById('qr-reader');
 
-        // Tab switching
-        btnManual.addEventListener('click', () => switchTab('manual-entry'));
-        btnQr.addEventListener('click', () => switchTab('qr-scanner'));
+        // --- 4. CORE FUNCTIONS ---
 
-        // Search bar
-        searchInput.addEventListener('input', filterStudentList);
+        function showToast(message, isError = false) {
+            // --- MODIFICATION START ---
+            // Do not show toast if scanner modal is active
+            if (scannerModal.style.display === 'block') {
+                console.log(`[Toast Suppressed]: ${message}`);
+                return; 
+            }
+            // --- MODIFICATION END ---
+            
+            if (toastTimer) clearTimeout(toastTimer);
+            toastMessage.textContent = message;
+            toast.style.backgroundColor = isError ? '#e53e3e' : '#333';
+            toast.classList.add('show');
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+                toastTimer = null;
+            }, 3000); 
+        }
 
-        // Listen for checkbox changes to update count
-        studentListContainer.addEventListener('change', (e) => {
-            if (e.target.classList.contains('attendance-checkbox')) {
-                updateSubmitButtonCount();
-            }
-        });
+        // --- Formatting Helpers ---
+        function formatTime(timeString) {
+            if (!timeString) return 'N/A';
+            const [hours, minutes] = timeString.split(':');
+            const d = new Date();
+            d.setHours(parseInt(hours));
+            d.setMinutes(parseInt(minutes));
+            return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+         function formatDate(dateString) {
+             if (!dateString) return 'N/A';
+             const [year, month, day] = dateString.split('-');
+             return `${day}/${month}/${year}`;
+         }
 
-        // Submit button
-        submitBtn.addEventListener('click', handleSubmitAttendance);
+        /**
+         * Loads all necessary data on page load
+         */
+        async function loadPageData() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                currentLectureId = params.get('lecture_id');
+                if (!currentLectureId) {
+                    showToast('No lecture ID found!', true);
+                    return;
+                }
 
-        // Scanner Modal Listeners
-        openScannerBtn.addEventListener('click', () => {
-            scannerModal.style.display = 'block';
-            
-            const config = { 
-                fps: 10, 
-                qrbox: { width: 250, height: 250 } 
-            };
-            
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                config,
-                onScanSuccess,
-                onScanFailure
-            ).catch(err => {
-                showToast('Error starting camera. Please grant permission.', true);
-                console.error("Error starting camera: ", err);
-                scannerModal.style.display = 'none';
-            });
-        });
+                const { data: lecture, error: lectureError } = await _supabase
+                    .from('lectures')
+                    .select('*')
+                    .eq('lecture_id', currentLectureId)
+                    .single();
+                
+                if (lectureError) throw new Error('Could not fetch lecture details.');
+                currentLecture = lecture;
+                updateHeader(lecture);
 
-        scannerCloseBtn.addEventListener('click', closeScanner);
-        scannerModal.querySelector('.scanner-backdrop').addEventListener('click', closeScanner);
+                const { data: students, error: studentError } = await _supabase
+                    .from('students')
+                    .select('student_id, name') 
+                    .eq('course', lecture.course)
+                    .order('name', { ascending: true });
 
-    </script>
+                if (studentError) throw new Error('Could not fetch students.');
+                allStudents = students;
+
+                const { data: records, error: recordError } = await _supabase
+                    .from('attendance_records')
+                    .select('student_id, status')
+                    .eq('lecture_id', currentLectureId)
+                    .eq('type', 'lecture');
+                
+                if (recordError) throw new Error('Could not fetch attendance records.');
+                
+                attendanceRecords = new Map(records.map(r => [r.student_id, r.status]));
+
+ind-pa-b-ok-en.gif                 renderStudentList();
+
+            } catch (error) {
+                console.error('Error loading page data:', error.message);
+                showToast(error.message, true);
+            }
+        }
+
+        function updateHeader(lecture) {
+            document.getElementById('lecture-subject').textContent = lecture.subject_name;
+            document.getElementById('lecture-date').textContent = formatDate(lecture.date);
+            document.getElementById('lecture-time').textContent = 
+                `${formatTime(lecture.start_time)} - ${formatTime(lecture.end_time)}`;
+        }
+
+        function renderStudentList() {
+            studentListContainer.innerHTML = ''; 
+            
+            if (allStudents.length === 0) {
+                studentListContainer.innerHTML = '<p style="text-align:center; color: #718096;">No students found for this course.</p>';
+is-pa-b-ok-en.gif                 return;
+            }
+
+            allStudents.forEach(student => {
+                const isPresent = attendanceRecords.get(student.student_id) === true;
+                
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <span class="student-name">${student.name}</span>
+Read-pa-b-ok-en.gif                     <input type="checkbox" 
+                           class="attendance-checkbox" 
+                           data-student-id="${student.student_id}" 
+                           ${isPresent ? 'checked' : ''}>
+                `;
+                studentListContainer.appendChild(item);
+is-pa-b-ok-en.gif           });
+            
+            updateSubmitButtonCount(); 
+        }
+
+        function updateSubmitButtonCount() {
+            const totalStudents = allStudents.length;
+            const presentStudents = studentListContainer.querySelectorAll('.attendance-checkbox:checked').length;
+            submitBtn.textContent = `Submit Attendance (${presentStudents}/${totalStudents})`;
+        }
+
+        async function handleSubmitAttendance() {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            const checkboxes = studentListContainer.querySelectorAll('.attendance-checkbox');
+            const recordsToUpsert = [];
+            const now = new Date().toISOString();
+
+            checkboxes.forEach(cb => {
+                recordsToUpsert.push({
+                    student_id: parseInt(cb.dataset.studentId), 
+                    lecture_id: parseInt(currentLectureId), 
+                    type: 'lecture',
+                    status: cb.checked, 
+                    marked_at: now
+                });
+            });
+
+            try {
+                const { error } = await _supabase
+                    .from('attendance_records')
+                    .upsert(recordsToUpsert, {
+                        onConflict: 'student_id, lecture_id, type' 
+                    });
+                
+                if (error) throw error;
+
+                showToast('Attendance submitted successfully! 🎉');
+                
+                recordsToUpsert.forEach(r => attendanceRecords.set(r.student_id, r.status));
+
+            } catch (error) {
+                console.error('Error submitting attendance:', error.message);
+                showToast(`Error: ${error.message}`, true);
+  _http:         } finally {
+                submitBtn.disabled = false;
+A-pa-b-ok-en.gif                 updateSubmitButtonCount(); 
+            }
+        }
+
+        function filterStudentList() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const students = studentListContainer.querySelectorAll('.student-item');
+            
+            students.forEach(student => {
+                const name = student.querySelector('.student-name').textContent.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    student.style.display = 'flex';
+s-pa-b-ok-en.gif                 } else {
+                    student.style.display = 'none';
+                }
+            });
+        }
+
+        function switchTab(tabName) {
+            if (tabName === 'manual-entry') {
+                manualTab.classList.add('active');
+                qrTab.classList.remove('active');
+                btnManual.classList.add('active');
+                btnQr.classList.remove('active');
+                submitFooter.style.display = 'block'; 
+            } else if (tabName === 'qr-scanner') {
+                manualTab.classList.remove('active');
+TA-pa-b-ok-en.gif                 qrTab.classList.add('active');
+                btnManual.classList.remove('active');
+                btnQr.classList.add('active');
+A-pa-b-ok-en.gif                 submitFooter.style.display = 'none'; 
+                scannedStudentCount = 0;
+                scannedCountLabel.textContent = `Scanned: 0 students`;
+            }
+        }
+
+        /**
+         * NEW: Marks a student as present from a scan or simulation
+S-pa-b-ok-en.gif          */
+        function markStudentPresent(studentId) {
+            const student = allStudents.find(s => s.student_id === studentId);
+            
+            if (!student) {
+                showToast(`Student ID ${studentId} not found in this class.`, true);
+                return false; // Indicate failure
+            }
+
+            const checkbox = document.querySelector(`.attendance-checkbox[data-student-id="${studentId}"]`);
+            
+            if (!checkbox) {
+                showToast(`UI Error: Could not find checkbox for ${student.name}`, true);
+                return false; // Indicate failure
+            }
+
+            if (checkbox.checked) {
+                showToast(`${student.name} already marked present.`);
+            } else {
+                checkbox.checked = true;
+                showToast(`Scanned: ${student.name} ✅`);
+                updateSubmitButtonCount(); // Update the main submit button
+            }
+            return true; // Indicate success
+Read-pa-b-ok-en.gif         }
+
+        /**
+         * NEW: QR Scan Success Callback
+         */
+        function onScanSuccess(decodedText, decodedResult) {
+            const studentId = parseInt(decodedText);
+            
+            if (isNaN(studentId)) {
+                // Ignore scans that aren't numbers
+                console.warn(`Scanned non-numeric QR: ${decodedText}`);
+                showToast(`Invalid QR. Please scan a valid student ID.`, true);
+                return;
+            }
+
+            // Mark the student and play beep if successful
+is-pa-b-ok-en.gif             const success = markStudentPresent(studentId);
+            if (success) {
+                beepSound.play();
+SA-pa-b-ok-en.gif                 // Update the counter on the QR tab
+                scannedStudentCount++;
+                scannedCountLabel.textContent = `Scanned: ${scannedStudentCount} students`;
+            }
+        }
+
+        /**
+         * NEW: QR Scan Failure Callback
+  TA-pa-b-ok-en.gif          */
+        function onScanFailure(error) {
+Read-pa-b-ok-en.gif             // This will fire constantly, so we'll just log warnings
+            // console.warn(`QR scan error: ${error}`);
+        }
+
+        /**
+         * NEW: Stops the camera and hides the modal
+         */
+        function closeScanner() {
+            try {
+                if (html5QrCode && html5QrCode.isScanning) {
+                    html5QrCode.stop();
+                }
+            } catch (err) {
+A-pa-b-ok-en.gif                 console.error("Error stopping scanner: ", err);
+            }
+            scannerModal.style.display = 'none';
+            // Switch back to manual tab so user can see their changes
+      ci-pa-b-ok-en.gif       switchTab('manual-entry');
+        }
+
+
+        // --- 5. EVENT LISTENERS ---
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPageData();
+
+            // --- NEW: Initialize Scanner & Beep ---
+            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            // Create a simple beep sound
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // --- MODIFICATION START ---
+                beepSound = {
+                    play: () => {
+                        if (!audioContext) return;
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.type = 'triangle'; // Softer sound
+                        oscillator.frequency.setValueAtTime(1200, audioContext.currentTime); // Higher pitch
+                        
+                        // Short 50ms beep with fade-out
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.05);
+
+S-pa-b-ok-en.gif                         oscillator.start(audioContext.currentTime);
+                        oscillator.stop(audioContext.currentTime + 0.05);
+                    }
+                };
+                // --- MODIFICATION END ---
+s-pa-b-ok-en.gif             } catch (e) {
+                console.error("Web Audio API is not supported in this browser");
+                // Create a dummy beepSound object so the app doesn't crash
+                beepSound = { play: () => {} }; 
+            }
+        });
+
+        document.querySelector('.back-btn').addEventListener('click', () => {
+S-pa-b-ok-en.gif             window.history.back(); 
+        });
+
+        // Tab switching
+        btnManual.addEventListener('click', () => switchTab('manual-entry'));
+        btnQr.addEventListener('click', () => switchTab('qr-scanner'));
+
+        // Search bar
+        searchInput.addEventListener('input', filterStudentList);
+
+        // Listen for checkbox changes to update count
+        studentListContainer.addEventListener('change', (e) => {
+            if (e.target.classList.contains('attendance-checkbox')) {
+                updateSubmitButtonCount();
+            }
+        });
+
+        // Submit button
+        submitBtn.addEventListener('click', handleSubmitAttendance);
+
+        // --- NEW: Scanner Modal Listeners ---
+        openScannerBtn.addEventListener('click', () => {
+            // Attempt to create AudioContext on user interaction if it failed to load
+            if (!audioContext) {
+                try {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.error("Could not create AudioContext on click");
+                }
+            }
+            
+            scannerModal.style.display = 'block';
+Read-pa-b-ok-en.gif             
+    A-pa-b-ok-en.gif         // Start the scanner
+            const config = { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 }IA-pa-b-ok-en.gif  
+            };
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, // Use rear camera
+                config,
+                onScanSuccess,
+s-pa-b-ok-en.gif                 onScanFailure
+            ).catch(err => {
+                showToast('Error starting camera. Please grant permission.', true);
+                console.error("Error starting camera: ", err);
+                scannerModal.style.display = 'none';
+            });
+        });
+
+        scannerCloseBtn.addEventListener('click', closeScanner);
+        scannerModal.querySelector('.scanner-backdrop').addEventListener('click', closeScanner);
+
+    </script>
 
 </body>
 </html>
