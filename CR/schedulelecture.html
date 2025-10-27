@@ -11,6 +11,8 @@
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         /* -------------------
          * Global Reset & Setup
@@ -135,7 +137,9 @@
             color: #475569;
         }
 
-        .form-group input {
+        /* Style for both input and select */
+        .form-group input,
+        .form-group select {
             width: 100%;
             padding: 12px 16px;
             border: 1px solid #e2e8f0;
@@ -145,9 +149,23 @@
             font-family: 'Inter', sans-serif;
             font-weight: 500;
             color: #1a202c;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
         
-        .form-group input:focus {
+        /* Specifics for select to show arrow */
+        .form-group select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23718096'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            background-size: 24px;
+            padding-right: 48px; /* Make space for arrow */
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #4f46e5;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
@@ -157,28 +175,19 @@
             color: #94a3b8;
         }
         
-        .form-group input:disabled {
+        /* Combined disabled style */
+        .form-group input:disabled,
+        .form-group select:disabled {
             background-color: #f1f5f9;
             color: #718096;
             cursor: not-allowed;
+            border-color: #e2e8f0;
         }
         
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
-        }
-        
-        .input-with-icon {
-            position: relative;
-        }
-        
-        .input-with-icon .icon {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #718096;
         }
         
         .submit-btn {
@@ -197,6 +206,12 @@
         
         .submit-btn:active {
             transform: scale(0.98);
+        }
+
+        .submit-btn:disabled {
+            background-image: none;
+            background-color: #cbd5e1;
+            cursor: wait;
         }
 
         /* -------------------
@@ -320,13 +335,16 @@
             </header>
 
             <div class="card">
-                <form action="#">
+                <form id="lecture-form">
+                    
                     <div class="form-group">
                         <label for="subject">
                             <span class="material-symbols-outlined">book</span>
                             Subject Name
                         </label>
-                        <input type="text" id="subject" placeholder="e.g., Data Structures">
+                        <select id="subject" required>
+                            <option value="" disabled selected>Loading subjects...</option>
+                            </select>
                     </div>
                     
                     <div class="form-group">
@@ -334,7 +352,7 @@
                             <span class="material-symbols-outlined">person</span>
                             Professor Name
                         </label>
-                        <input type="text" id="professor" placeholder="e.g., Dr. Rajesh Kumar">
+                        <input type="text" id="professor" placeholder="Select a subject first" disabled>
                     </div>
                     
                     <div class="form-group">
@@ -342,31 +360,35 @@
                             <span class="material-symbols-outlined">groups</span>
                             Class
                         </label>
-                        <input type="text" id="class" value="CS 2025" disabled>
+                        <input type="text" id="class" placeholder="Loading class..." disabled>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="date">
+                            <span class="material-symbols-outlined">calendar_month</span>
+                            Date
+                        </label>
+                        <input type="date" id="date" required>
                     </div>
                     
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="date">
-                                <span class="material-symbols-outlined">calendar_month</span>
-                                Date
-                            </label>
-                            <div class="input-with-icon">
-                                <input type="text" id="date" placeholder="dd----yyyy">
-                                <span class="material-symbols-outlined icon">calendar_today</span>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="time">
+                            <label for="start-time">
                                 <span class="material-symbols-outlined">schedule</span>
-                                Time Slot
+                                Start Time
                             </label>
-                            <input type="text" id="time" value="09:00 AM - 10:00 AM">
+                            <input type="time" id="start-time" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="end-time">
+                                <span class="material-symbols-outlined">update</span>
+                                End Time
+                            </label>
+                            <input type="time" id="end-time" required>
                         </div>
                     </div>
                     
-                    <button type="submit" class="submit-btn">Schedule Lecture</button>
+                    <button type="submit" class="submit-btn" id="submit-btn">Schedule Lecture</button>
                 </form>
             </div>
             
@@ -401,6 +423,199 @@
         </nav>
 
     </div>
+
+    <script>
+        // --- 1. SUPABASE SETUP ---
+        // TODO: Replace with your actual Supabase URL and Anon Key
+        const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- 2. GLOBAL VARIABLES ---
+        let currentUserProfile = null; // To store user's profile from 'public.users'
+        let subjectData = [];          // To store fetched subjects
+
+        // --- 3. DOM ELEMENTS ---
+        const subjectSelect = document.getElementById('subject');
+        const professorInput = document.getElementById('professor');
+        const classInput = document.getElementById('class');
+        const dateInput = document.getElementById('date');
+        const startTimeInput = document.getElementById('start-time');
+        const endTimeInput = document.getElementById('end-time');
+        const lectureForm = document.getElementById('lecture-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        // --- 4. CORE FUNCTIONS ---
+
+        /**
+         * Gets the current auth user, then fetches their profile from 'public.users'
+         * and triggers the loading of subjects.
+         */
+        async function checkUserAndLoadData() {
+            try {
+                // Get user from Supabase Auth
+                const { data: { user }, error: authError } = await _supabase.auth.getUser();
+
+                if (authError) throw authError;
+                if (!user) {
+                    alert('You are not logged in. Redirecting to login page...');
+                    // window.location.href = '/login.html'; // Uncomment to redirect
+                    return;
+                }
+
+                // Get user profile from 'public.users' table
+                const { data: profile, error: profileError } = await _supabase
+                    .from('public_users') // Matching your table name from the image
+                    .select('*')
+                    .eq('auth_id', user.id)
+                    .single();
+                
+                if (profileError) throw profileError;
+                if (!profile) {
+                    alert('Could not find user profile.');
+                    return;
+                }
+
+                currentUserProfile = profile; // Store profile globally
+
+                // 1. Populate the disabled 'Class' field
+                classInput.value = currentUserProfile.course.toUpperCase();
+
+                // 2. Load subjects for that user's course
+                await loadSubjects(currentUserProfile.course);
+
+            } catch (error) {
+                console.error('Error loading user data:', error.message);
+                alert(`Error: ${error.message}`);
+                subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</option>`;
+            }
+        }
+
+        /**
+         * Fetches subjects from the 'public.subjects' table based on the user's course
+         * and populates the subject dropdown.
+         */
+        async function loadSubjects(course) {
+            try {
+                const { data, error } = await _supabase
+                    .from('public_subjects') // Matching your table name from the image
+                    .select('subject_name, professor_name')
+                    .eq('course', course);
+
+                if (error) throw error;
+
+                subjectData = data; // Store data for later use
+
+                // Clear "loading" option
+                subjectSelect.innerHTML = ''; 
+                
+                // Add default "select" option
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'Select a subject...';
+                defaultOption.disabled = true;
+                defaultOption.selected = true;
+                subjectSelect.appendChild(defaultOption);
+
+                // Add each subject as an option
+                subjectData.forEach(subject => {
+                    const option = document.createElement('option');
+                    option.value = subject.subject_name;
+                    option.textContent = subject.subject_name;
+                    // Store professor name in a data attribute
+                    option.dataset.professor = subject.professor_name;
+                    subjectSelect.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Error loading subjects:', error.message);
+                subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</option>`;
+            }
+        }
+
+        /**
+         * Handles the form submission to create a new lecture.
+         */
+        async function handleFormSubmit(event) {
+            event.preventDefault(); // Stop form from reloading page
+
+            if (!currentUserProfile) {
+                alert('User profile not loaded. Please refresh.');
+                return;
+            }
+
+            // Get all values from the form
+            const newLecture = {
+                subject_name: subjectSelect.value,
+                prof_name: professorInput.value,
+                course: currentUserProfile.course, // Use the stored course
+                date: dateInput.value,
+                start_time: startTimeInput.value,
+                end_time: endTimeInput.value,
+                created_by: currentUserProfile.auth_id // Use the auth_id as requested
+            };
+
+            // Basic validation
+            if (!newLecture.subject_name || !newLecture.date || !newLecture.start_time || !newLecture.end_time) {
+                alert('Please fill out all fields.');
+                return;
+            }
+
+            // Disable button to prevent double-click
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Scheduling...';
+
+            try {
+                // Insert into 'public.lectures' table
+                const { error } = await _supabase
+                    .from('public_lectures') // Matching your table name from the image
+                    .insert([newLecture]);
+
+                if (error) throw error;
+
+                alert('Lecture scheduled successfully!');
+                lectureForm.reset(); // Clear the form
+                professorInput.value = ''; // Reset disabled field
+                classInput.value = currentUserProfile.course.toUpperCase(); // Re-populate class
+                subjectSelect.focus();
+
+
+            } catch (error) {
+                console.error('Error scheduling lecture:', error.message);
+                alert(`Error: ${error.message}`);
+            } finally {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Schedule Lecture';
+            }
+        }
+
+        // --- 5. EVENT LISTENERS ---
+
+        // Run the main setup function when the page loads
+        document.addEventListener('DOMContentLoaded', checkUserAndLoadData);
+
+        // Listen for changes on the subject dropdown
+        subjectSelect.addEventListener('change', (event) => {
+            // Find the selected option
+            const selectedOption = event.target.selectedOptions[0];
+            // Get the professor name from the data attribute
+            const professorName = selectedOption.dataset.professor;
+            // Set the disabled professor input's value
+            professorInput.value = professorName || 'N/A';
+        });
+
+        // Listen for the form submission
+        lectureForm.addEventListener('submit', handleFormSubmit);
+
+        // Back button functionality
+        document.querySelector('.back-btn').addEventListener('click', () => {
+            window.history.back(); // Go to the previous page
+        });
+
+    </script>
 
 </body>
 </html>
