@@ -46,12 +46,12 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background-color: #ffffff; /* White background for this page */
+            background-color: #ffffff;
         }
         .main-content {
             flex-grow: 1; 
             overflow-y: auto; 
-            padding: 24px 20px 180px 20px; /* Padding for header AND submit button */
+            padding: 24px 20px 180px 20px; 
             scrollbar-width: none; 
             -ms-overflow-style: none; 
         }
@@ -132,7 +132,6 @@
             font-variation-settings: 'wght' 500;
         }
         
-        /* Tab Content */
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
@@ -153,7 +152,7 @@
         }
         .search-bar input {
             width: 100%;
-            padding: 12px 16px 12px 48px; /* Space for icon */
+            padding: 12px 16px 12px 48px;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
             background-color: #ffffff;
@@ -210,7 +209,7 @@
             border-color: #4f46e5;
         }
         .student-item input[type="checkbox"]:checked::after {
-            content: '\e5ca'; /* Check mark icon */
+            content: '\e5ca';
             font-family: 'Material Symbols Outlined';
             font-weight: normal;
             font-style: normal;
@@ -232,14 +231,29 @@
         }
 
         /* -------------------
-         * QR Scanner Tab
+         * QR Scanner Tab (NEW)
          * ------------------- */
         .qr-scanner-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             padding: 30px 10px;
-            border: 1px dashed #cbd5e1;
+            border: 1px solid #f1f5f9;
             border-radius: 12px;
+            background-color: #ffffff;
+            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+        }
+        .qr-scanner-content .qr-icon-wrapper {
+            width: 120px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
         }
         .qr-scanner-content .qr-icon {
             font-size: 80px;
@@ -248,15 +262,40 @@
         .qr-scanner-content p {
             font-size: 14px;
             color: #475569;
-            margin-top: 12px;
+            margin-top: 20px;
+            font-weight: 500;
         }
+        .simulate-scan-btn {
+            width: 100%;
+            max-width: 250px;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background-color: #22c55e;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 20px;
+        }
+        .simulate-scan-btn:active {
+            transform: scale(0.98);
+        }
+        .qr-scanner-content .scanned-count {
+            margin-top: 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1a202c;
+        }
+
 
         /* -------------------
          * Fixed Submit Button
          * ------------------- */
         .submit-footer {
             position: fixed;
-            bottom: 80px; /* Above the 80px bottom-nav */
+            bottom: 80px; 
             left: 0;
             right: 0;
             padding: 16px 20px;
@@ -366,14 +405,12 @@
                 border-bottom-right-radius: 24px;
             }
             .submit-footer {
-                /* Constrain to app container */
                 width: 100%;
                 max-width: 450px;
                 bottom: 80px;
                 border-radius: 24px;
             }
             .toast {
-                /* Position within the app container */
                 position: absolute;
             }
         }
@@ -424,8 +461,14 @@
 
             <div id="qr-scanner" class="tab-content">
                 <div class="qr-scanner-content">
-                    <span class="material-symbols-outlined qr-icon">qr_code_2</span>
-                    <p>QR Scanner functionality coming soon.</p>
+                    <div class="qr-icon-wrapper">
+                        <span class="material-symbols-outlined qr-icon">qr_code_2</span>
+                    </div>
+                    <p>Position QR code within the frame</p>
+                    <button class="simulate-scan-btn" id="simulate-scan-btn">
+                        Simulate Scan
+                    </button>
+                    <p class="scanned-count" id="scanned-count">Scanned: 0 students</p>
                 </div>
             </div>
 
@@ -472,8 +515,9 @@
         let toastTimer;
         let currentLecture = null;
         let allStudents = [];
-        let attendanceRecords = new Map(); // Use a Map for efficient lookups
+        let attendanceRecords = new Map();
         let currentLectureId = null;
+        let scannedStudentCount = 0; // <-- NEW
 
         // --- 3. DOM ELEMENTS ---
         const toast = document.getElementById('toast');
@@ -486,13 +530,15 @@
         const btnManual = document.getElementById('btn-manual');
         const btnQr = document.getElementById('btn-qr');
         const submitFooter = document.getElementById('submit-footer');
+        const simulateScanBtn = document.getElementById('simulate-scan-btn'); // <-- NEW
+        const scannedCountLabel = document.getElementById('scanned-count'); // <-- NEW
 
         // --- 4. CORE FUNCTIONS ---
 
         function showToast(message, isError = false) {
             if (toastTimer) clearTimeout(toastTimer);
             toastMessage.textContent = message;
-            toast.style.backgroundColor = isError ? '#e53e3e' : '#333'; // Red for error
+            toast.style.backgroundColor = isError ? '#e53e3e' : '#333';
             toast.classList.add('show');
             toastTimer = setTimeout(() => {
                 toast.classList.remove('show');
@@ -520,7 +566,6 @@
          */
         async function loadPageData() {
             try {
-                // 1. Get Lecture ID from URL
                 const params = new URLSearchParams(window.location.search);
                 currentLectureId = params.get('lecture_id');
                 if (!currentLectureId) {
@@ -528,7 +573,6 @@
                     return;
                 }
 
-                // 2. Get Lecture Details
                 const { data: lecture, error: lectureError } = await _supabase
                     .from('lectures')
                     .select('*')
@@ -539,17 +583,17 @@
                 currentLecture = lecture;
                 updateHeader(lecture);
 
-                // 3. Get all students for this lecture's course
+                // Fetch students for the course
                 const { data: students, error: studentError } = await _supabase
                     .from('students')
-                    .select('student_id, name') // Only fetch what we need
+                    .select('student_id, name') 
                     .eq('course', lecture.course)
                     .order('name', { ascending: true });
 
                 if (studentError) throw new Error('Could not fetch students.');
                 allStudents = students;
 
-                // 4. Get existing attendance records
+                // Fetch existing attendance records
                 const { data: records, error: recordError } = await _supabase
                     .from('attendance_records')
                     .select('student_id, status')
@@ -558,10 +602,8 @@
                 
                 if (recordError) throw new Error('Could not fetch attendance records.');
                 
-                // Store records in a Map for fast O(1) lookup
                 attendanceRecords = new Map(records.map(r => [r.student_id, r.status]));
 
-                // 5. Render the list
                 renderStudentList();
 
             } catch (error) {
@@ -584,7 +626,7 @@
          * Renders the student list into the container
          */
         function renderStudentList() {
-            studentListContainer.innerHTML = ''; // Clear existing
+            studentListContainer.innerHTML = ''; 
             
             if (allStudents.length === 0) {
                 studentListContainer.innerHTML = '<p style="text-align:center; color: #718096;">No students found for this course.</p>';
@@ -592,7 +634,6 @@
             }
 
             allStudents.forEach(student => {
-                // Check if student was marked present
                 const isPresent = attendanceRecords.get(student.student_id) === true;
                 
                 const item = document.createElement('div');
@@ -607,7 +648,7 @@
                 studentListContainer.appendChild(item);
             });
             
-            updateSubmitButtonCount(); // Update count after rendering
+            updateSubmitButtonCount(); 
         }
 
         /**
@@ -632,27 +673,25 @@
 
             checkboxes.forEach(cb => {
                 recordsToUpsert.push({
-                    student_id: cb.dataset.studentId,
-                    lecture_id: currentLectureId,
+                    student_id: parseInt(cb.dataset.studentId), // Ensure it's a number
+                    lecture_id: parseInt(currentLectureId), // Ensure it's a number
                     type: 'lecture',
-                    status: cb.checked, // true if present, false if absent
+                    status: cb.checked, 
                     marked_at: now
                 });
             });
 
             try {
-                // Use upsert to insert new records or update existing ones
                 const { error } = await _supabase
                     .from('attendance_records')
                     .upsert(recordsToUpsert, {
-                        onConflict: 'student_id, lecture_id, type' // Assumes a unique constraint on these
+                        onConflict: 'student_id, lecture_id, type' 
                     });
                 
                 if (error) throw error;
 
                 showToast('Attendance submitted successfully! 🎉');
                 
-                // Update the local map with new statuses
                 recordsToUpsert.forEach(r => attendanceRecords.set(r.student_id, r.status));
 
             } catch (error) {
@@ -660,7 +699,7 @@
                 showToast(`Error: ${error.message}`, true);
             } finally {
                 submitBtn.disabled = false;
-                updateSubmitButtonCount(); // Reset button text
+                updateSubmitButtonCount(); 
             }
         }
 
@@ -690,22 +729,80 @@
                 qrTab.classList.remove('active');
                 btnManual.classList.add('active');
                 btnQr.classList.remove('active');
-                submitFooter.style.display = 'block'; // Show submit button
+                submitFooter.style.display = 'block'; 
             } else if (tabName === 'qr-scanner') {
                 manualTab.classList.remove('active');
                 qrTab.classList.add('active');
                 btnManual.classList.remove('active');
                 btnQr.classList.add('active');
-                submitFooter.style.display = 'none'; // Hide submit button
+                submitFooter.style.display = 'none'; 
+                // Reset QR scanner count
+                scannedStudentCount = 0;
+                scannedCountLabel.textContent = `Scanned: 0 students`;
             }
         }
 
+        /**
+         * NEW: Simulates a QR scan
+         */
+        function simulateScan() {
+            const studentIdString = prompt("Simulate Scan: Enter Student ID:");
+            
+            if (!studentIdString) return; // User cancelled
+            
+            const studentId = parseInt(studentIdString);
+            if (isNaN(studentId)) {
+                showToast(`Invalid Student ID. Please enter a number.`, true);
+                return;
+            }
+
+            markStudentPresent(studentId);
+        }
+
+        /**
+         * NEW: Marks a student as present from a scan
+         */
+        function markStudentPresent(studentId) {
+            // Find the student's name from the loaded list
+            const student = allStudents.find(s => s.student_id === studentId);
+            
+            if (!student) {
+                showToast(`Student ID ${studentId} not found in this class.`, true);
+                return;
+            }
+
+            // Find the corresponding checkbox in the manual list
+            const checkbox = document.querySelector(`.attendance-checkbox[data-student-id="${studentId}"]`);
+            
+            if (!checkbox) {
+                // This should not happen if allStudents is in sync with render
+                showToast(`UI Error: Could not find checkbox for ${student.name}`, true);
+                return;
+            }
+
+            if (checkbox.checked) {
+                showToast(`${student.name} already marked present.`);
+                // Switch back to manual tab anyway so user can see
+                switchTab('manual-entry');
+                // Scroll to the student
+                checkbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                checkbox.checked = true;
+                scannedStudentCount++;
+                scannedCountLabel.textContent = `Scanned: ${scannedStudentCount} students`;
+                showToast(`Scanned: ${student.name} ✅`);
+                updateSubmitButtonCount(); // Update the main submit button
+                switchTab('manual-entry'); // Switch back to manual tab
+                // Scroll to the student
+                checkbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+
         // --- 5. EVENT LISTENERS ---
 
-        // Load all data when the page is ready
         document.addEventListener('DOMContentLoaded', loadPageData);
 
-        // Back button
         document.querySelector('.back-btn').addEventListener('click', () => {
             window.history.back(); 
         });
@@ -717,7 +814,7 @@
         // Search bar
         searchInput.addEventListener('input', filterStudentList);
 
-        // Listen for checkbox changes to update count (using event delegation)
+        // Listen for checkbox changes to update count
         studentListContainer.addEventListener('change', (e) => {
             if (e.target.classList.contains('attendance-checkbox')) {
                 updateSubmitButtonCount();
@@ -726,6 +823,9 @@
 
         // Submit button
         submitBtn.addEventListener('click', handleSubmitAttendance);
+
+        // NEW: Simulate scan button
+        simulateScanBtn.addEventListener('click', simulateScan);
 
     </script>
 
