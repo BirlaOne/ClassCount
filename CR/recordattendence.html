@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
         /* -------------------
@@ -231,7 +233,7 @@
         }
 
         /* -------------------
-         * QR Scanner Tab (NEW)
+         * QR Scanner Tab
          * ------------------- */
         .qr-scanner-content {
             display: flex;
@@ -265,7 +267,7 @@
             margin-top: 20px;
             font-weight: 500;
         }
-        .simulate-scan-btn {
+        .simulate-scan-btn { /* Renamed to "Open Scanner" in JS */
             width: 100%;
             max-width: 250px;
             padding: 12px;
@@ -299,7 +301,7 @@
             left: 0;
             right: 0;
             padding: 16px 20px;
-            background-image: linear-gradient(to top, #ffffff 70%, rgba(255,255,255,0));
+            background-image: linear-gradient(to top, #ffffff 70%, rgba(255,255,250,0));
             z-index: 900;
         }
         .submit-btn {
@@ -381,6 +383,63 @@
         }
         
         /* -------------------
+         * NEW: QR Scanner Modal
+         * ------------------- */
+        .scanner-modal {
+            display: none;
+            position: fixed;
+            z-index: 5000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+        }
+        .scanner-modal .scanner-backdrop {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+        }
+        .scanner-modal .scanner-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #ffffff;
+            padding: 24px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .scanner-modal .scanner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .scanner-modal .scanner-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .scanner-modal .scanner-close-btn {
+            font-size: 28px;
+            color: #718096;
+            cursor: pointer;
+            line-height: 1;
+        }
+        #qr-reader {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+        }
+        
+        /* -------------------
          * Desktop Media Query
          * ------------------- */
         @media (min-width: 500px) {
@@ -410,8 +469,8 @@
                 bottom: 80px;
                 border-radius: 24px;
             }
-            .toast {
-                position: absolute;
+            .toast, .scanner-modal {
+                position: absolute; /* Contain modal to app */
             }
         }
     </style>
@@ -464,9 +523,9 @@
                     <div class="qr-icon-wrapper">
                         <span class="material-symbols-outlined qr-icon">qr_code_2</span>
                     </div>
-                    <p>Position QR code within the frame</p>
-                    <button class="simulate-scan-btn" id="simulate-scan-btn">
-                        Simulate Scan
+                    <p>Open the scanner to mark attendance</p>
+                    <button class="simulate-scan-btn" id="open-scanner-btn">
+                        Open Scanner
                     </button>
                     <p class="scanned-count" id="scanned-count">Scanned: 0 students</p>
                 </div>
@@ -502,6 +561,18 @@
         </div>
 
     </div>
+    
+    <div id="scanner-modal" class="scanner-modal">
+        <div class="scanner-backdrop"></div>
+        <div class="scanner-content">
+            <div class="scanner-header">
+                <h2>Scan Student QR Code</h2>
+                <span class="material-symbols-outlined scanner-close-btn" id="scanner-close-btn">close</span>
+            </div>
+            <div id="qr-reader"></div>
+        </div>
+    </div>
+
 
     <script>
         // --- 1. SUPABASE SETUP ---
@@ -517,7 +588,9 @@
         let allStudents = [];
         let attendanceRecords = new Map();
         let currentLectureId = null;
-        let scannedStudentCount = 0; // <-- NEW
+        let scannedStudentCount = 0; 
+        let html5QrCode = null; // <-- NEW: For scanner instance
+        let beepSound = null; // <-- NEW: For audio
 
         // --- 3. DOM ELEMENTS ---
         const toast = document.getElementById('toast');
@@ -530,8 +603,12 @@
         const btnManual = document.getElementById('btn-manual');
         const btnQr = document.getElementById('btn-qr');
         const submitFooter = document.getElementById('submit-footer');
-        const simulateScanBtn = document.getElementById('simulate-scan-btn'); // <-- NEW
-        const scannedCountLabel = document.getElementById('scanned-count'); // <-- NEW
+        const openScannerBtn = document.getElementById('open-scanner-btn'); // <-- RENAMED
+        const scannedCountLabel = document.getElementById('scanned-count'); 
+        // --- NEW: Modal Elements ---
+        const scannerModal = document.getElementById('scanner-modal');
+        const scannerCloseBtn = document.getElementById('scanner-close-btn');
+        const qrReaderDiv = document.getElementById('qr-reader');
 
         // --- 4. CORE FUNCTIONS ---
 
@@ -583,7 +660,6 @@
                 currentLecture = lecture;
                 updateHeader(lecture);
 
-                // Fetch students for the course
                 const { data: students, error: studentError } = await _supabase
                     .from('students')
                     .select('student_id, name') 
@@ -593,7 +669,6 @@
                 if (studentError) throw new Error('Could not fetch students.');
                 allStudents = students;
 
-                // Fetch existing attendance records
                 const { data: records, error: recordError } = await _supabase
                     .from('attendance_records')
                     .select('student_id, status')
@@ -612,9 +687,6 @@
             }
         }
 
-        /**
-         * Populates the header with lecture info
-         */
         function updateHeader(lecture) {
             document.getElementById('lecture-subject').textContent = lecture.subject_name;
             document.getElementById('lecture-date').textContent = formatDate(lecture.date);
@@ -622,9 +694,6 @@
                 `${formatTime(lecture.start_time)} - ${formatTime(lecture.end_time)}`;
         }
 
-        /**
-         * Renders the student list into the container
-         */
         function renderStudentList() {
             studentListContainer.innerHTML = ''; 
             
@@ -651,18 +720,12 @@
             updateSubmitButtonCount(); 
         }
 
-        /**
-         * Updates the text on the submit button
-         */
         function updateSubmitButtonCount() {
             const totalStudents = allStudents.length;
             const presentStudents = studentListContainer.querySelectorAll('.attendance-checkbox:checked').length;
             submitBtn.textContent = `Submit Attendance (${presentStudents}/${totalStudents})`;
         }
 
-        /**
-         * Handles the click on the submit button
-         */
         async function handleSubmitAttendance() {
             submitBtn.disabled = true;
             submitBtn.textContent = 'Submitting...';
@@ -673,8 +736,8 @@
 
             checkboxes.forEach(cb => {
                 recordsToUpsert.push({
-                    student_id: parseInt(cb.dataset.studentId), // Ensure it's a number
-                    lecture_id: parseInt(currentLectureId), // Ensure it's a number
+                    student_id: parseInt(cb.dataset.studentId), 
+                    lecture_id: parseInt(currentLectureId), 
                     type: 'lecture',
                     status: cb.checked, 
                     marked_at: now
@@ -703,9 +766,6 @@
             }
         }
 
-        /**
-         * Filters the student list based on search input
-         */
         function filterStudentList() {
             const searchTerm = searchInput.value.toLowerCase();
             const students = studentListContainer.querySelectorAll('.student-item');
@@ -720,9 +780,6 @@
             });
         }
 
-        /**
-         * Handles tab switching
-         */
         function switchTab(tabName) {
             if (tabName === 'manual-entry') {
                 manualTab.classList.add('active');
@@ -736,72 +793,113 @@
                 btnManual.classList.remove('active');
                 btnQr.classList.add('active');
                 submitFooter.style.display = 'none'; 
-                // Reset QR scanner count
                 scannedStudentCount = 0;
                 scannedCountLabel.textContent = `Scanned: 0 students`;
             }
         }
 
         /**
-         * NEW: Simulates a QR scan
-         */
-        function simulateScan() {
-            const studentIdString = prompt("Simulate Scan: Enter Student ID:");
-            
-            if (!studentIdString) return; // User cancelled
-            
-            const studentId = parseInt(studentIdString);
-            if (isNaN(studentId)) {
-                showToast(`Invalid Student ID. Please enter a number.`, true);
-                return;
-            }
-
-            markStudentPresent(studentId);
-        }
-
-        /**
-         * NEW: Marks a student as present from a scan
+         * NEW: Marks a student as present from a scan or simulation
          */
         function markStudentPresent(studentId) {
-            // Find the student's name from the loaded list
             const student = allStudents.find(s => s.student_id === studentId);
             
             if (!student) {
                 showToast(`Student ID ${studentId} not found in this class.`, true);
-                return;
+                return false; // Indicate failure
             }
 
-            // Find the corresponding checkbox in the manual list
             const checkbox = document.querySelector(`.attendance-checkbox[data-student-id="${studentId}"]`);
             
             if (!checkbox) {
-                // This should not happen if allStudents is in sync with render
                 showToast(`UI Error: Could not find checkbox for ${student.name}`, true);
-                return;
+                return false; // Indicate failure
             }
 
             if (checkbox.checked) {
                 showToast(`${student.name} already marked present.`);
-                // Switch back to manual tab anyway so user can see
-                switchTab('manual-entry');
-                // Scroll to the student
-                checkbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
                 checkbox.checked = true;
-                scannedStudentCount++;
-                scannedCountLabel.textContent = `Scanned: ${scannedStudentCount} students`;
                 showToast(`Scanned: ${student.name} ✅`);
                 updateSubmitButtonCount(); // Update the main submit button
-                switchTab('manual-entry'); // Switch back to manual tab
-                // Scroll to the student
-                checkbox.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
+            return true; // Indicate success
+        }
+
+        /**
+         * NEW: QR Scan Success Callback
+         */
+        function onScanSuccess(decodedText, decodedResult) {
+            const studentId = parseInt(decodedText);
+            
+            if (isNaN(studentId)) {
+                // Ignore scans that aren't numbers
+                console.warn(`Scanned non-numeric QR: ${decodedText}`);
+                showToast(`Invalid QR. Please scan a valid student ID.`, true);
+                return;
+            }
+
+            // Mark the student and play beep if successful
+            const success = markStudentPresent(studentId);
+            if (success) {
+                beepSound.play();
+                // Update the counter on the QR tab
+                scannedStudentCount++;
+                scannedCountLabel.textContent = `Scanned: ${scannedStudentCount} students`;
+            }
+        }
+
+        /**
+         * NEW: QR Scan Failure Callback
+         */
+        function onScanFailure(error) {
+            // This will fire constantly, so we'll just log warnings
+            // console.warn(`QR scan error: ${error}`);
+        }
+
+        /**
+         * NEW: Stops the camera and hides the modal
+         */
+        function closeScanner() {
+            try {
+                if (html5QrCode && html5QrCode.isScanning) {
+                    html5QrCode.stop();
+                }
+            } catch (err) {
+                console.error("Error stopping scanner: ", err);
+            }
+            scannerModal.style.display = 'none';
+            // Switch back to manual tab so user can see their changes
+            switchTab('manual-entry');
         }
 
 
         // --- 5. EVENT LISTENERS ---
 
-        document.addEventListener('DOMContentLoaded', loadPageData);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadPageData();
+
+            // --- NEW: Initialize Scanner & Beep ---
+            html5QrCode = new Html5Qrcode("qr-reader");
+            
+            // Create a simple beep sound
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            beepSound = {
+                play: () => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A simple 'A' note
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime); // Volume
+                    
+                    oscillator.start();
+                    oscillator.stop(audioContext.currentTime + 0.1); // Play for 0.1 seconds
+                }
+            };
+        });
 
         document.querySelector('.back-btn').addEventListener('click', () => {
             window.history.back(); 
@@ -824,8 +922,30 @@
         // Submit button
         submitBtn.addEventListener('click', handleSubmitAttendance);
 
-        // NEW: Simulate scan button
-        simulateScanBtn.addEventListener('click', simulateScan);
+        // --- NEW: Scanner Modal Listeners ---
+        openScannerBtn.addEventListener('click', () => {
+            scannerModal.style.display = 'block';
+            
+            // Start the scanner
+            const config = { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 } 
+            };
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, // Use rear camera
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                showToast('Error starting camera. Please grant permission.', true);
+                console.error("Error starting camera: ", err);
+                scannerModal.style.display = 'none';
+            });
+        });
+
+        scannerCloseBtn.addEventListener('click', closeScanner);
+        scannerModal.querySelector('.scanner-backdrop').addEventListener('click', closeScanner);
 
     </script>
 
