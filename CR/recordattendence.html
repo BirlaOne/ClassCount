@@ -233,7 +233,7 @@
         }
 
         /* -------------------
-         * NEW: QR Scanner Tab
+         * QR Scanner Tab
          * ------------------- */
         #qr-reader-container {
             position: relative;
@@ -256,47 +256,8 @@
             display: block;
         }
         
-        #qr-scan-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(5px);
-            display: none; /* Hidden by default */
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            font-size: 18px;
-            font-weight: 600;
-            color: #1a202c;
-            z-index: 10;
-        }
-        #qr-scan-overlay.visible {
-            display: flex; /* Show when scan is done */
-        }
-        #qr-scan-overlay span {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        #scan-again-btn {
-            margin-top: 16px;
-            padding: 10px 20px;
-            background-color: #4f46e5;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        #scan-again-btn:active {
-            transform: scale(0.98);
-        }
+        /* Overlay CSS has been removed */
+
         #qr-scanner .scanned-count {
             text-align: center;
             font-weight: 500;
@@ -477,11 +438,7 @@
             <div id="qr-scanner" class="tab-content">
                 <div id="qr-reader-container">
                     <div id="qr-reader"></div>
-                    <div id="qr-scan-overlay">
-                        <span>Scanned: <strong id="last-scanned-name">Student Name</strong> ✅</span>
-                        <button id="scan-again-btn">Scan Again</button>
                     </div>
-                </div>
                 <p class="scanned-count" id="scanned-count">Scanned: 0 students</p>
             </div>
 
@@ -515,7 +472,7 @@
         </div>
 
     </div>
-    
+
     <script>
         // --- 1. SUPABASE SETUP ---
         const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
@@ -533,7 +490,7 @@
         let scannedStudentCount = 0; 
         let html5QrCode = null; // For scanner instance
         let beepSound = null; // For audio
-        let isScannerActive = false; // <-- NEW: To track scanner state
+        let isScannerActive = false; // To track scanner state
 
         // --- 3. DOM ELEMENTS ---
         const toast = document.getElementById('toast');
@@ -547,11 +504,9 @@
         const btnQr = document.getElementById('btn-qr');
         const submitFooter = document.getElementById('submit-footer');
         const scannedCountLabel = document.getElementById('scanned-count'); 
-        // --- NEW: In-page Scanner Elements ---
+        // --- In-page Scanner Elements ---
         const qrReaderDiv = document.getElementById('qr-reader');
-        const scanOverlay = document.getElementById('qr-scan-overlay');
-        const lastScannedName = document.getElementById('last-scanned-name');
-        const scanAgainBtn = document.getElementById('scan-again-btn');
+        // --- Overlay elements removed ---
 
         // --- 4. CORE FUNCTIONS ---
 
@@ -730,7 +685,7 @@
                 btnManual.classList.add('active');
                 btnQr.classList.remove('active');
                 submitFooter.style.display = 'block'; 
-                stopScanner(); // <-- Stop scanner when switching away
+                stopScanner(); // Stop scanner when switching away
             } else if (tabName === 'qr-scanner') {
                 manualTab.classList.remove('active');
                 qrTab.classList.add('active');
@@ -740,41 +695,42 @@
                 // Reset count and start scanner
                 scannedStudentCount = 0;
                 scannedCountLabel.textContent = `Scanned: 0 students`;
-                startScanner(); // <-- Start scanner when switching to
+                startScanner(); // Start scanner when switching to
             }
         }
 
         /**
-         * NEW: Marks a student as present from a scan
-         * @returns {object|null} Student object on success, null on failure
+         * MODIFIED: Marks a student as present from a scan
+         * @returns {object} { student: StudentObject, newlyMarked: boolean } | null
          */
         function markStudentPresent(studentId) {
             const student = allStudents.find(s => s.student_id === studentId);
             
             if (!student) {
                 showToast(`Student ID ${studentId} not found in this class.`, true);
-                return null; // <-- Return null
+                return null;
             }
 
             const checkbox = document.querySelector(`.attendance-checkbox[data-student-id="${studentId}"]`);
             
             if (!checkbox) {
                 showToast(`UI Error: Could not find checkbox for ${student.name}`, true);
-                return null; // <-- Return null
+                return null;
             }
 
             if (checkbox.checked) {
                 showToast(`${student.name} already marked present.`);
+                return { student: student, newlyMarked: false }; // MODIFIED: Return status
             } else {
                 checkbox.checked = true;
                 showToast(`Scanned: ${student.name} ✅`);
                 updateSubmitButtonCount();
+                return { student: student, newlyMarked: true }; // MODIFIED: Return status
             }
-            return student; // <-- Return student object
         }
 
         /**
-         * NEW: QR Scan Success Callback
+         * MODIFIED: QR Scan Success Callback
          */
         function onScanSuccess(decodedText, decodedResult) {
             const studentId = parseInt(decodedText);
@@ -784,27 +740,21 @@
                 return; // Keep scanning
             }
 
-            // Mark student and get student object back
-            const student = markStudentPresent(studentId);
+            // Mark student and get result
+            const result = markStudentPresent(studentId);
 
-            if (student) {
-                // --- THIS IS THE "SCAN ONCE" LOGIC ---
-                stopScanner();
+            // --- BEEP & COUNT ONLY IF NEWLY MARKED ---
+            if (result && result.newlyMarked) { 
                 beepSound.play();
                 
                 scannedStudentCount++;
                 scannedCountLabel.textContent = `Scanned: ${scannedStudentCount} students`;
-                
-                // Show overlay
-                lastScannedName.textContent = student.name;
-                scanOverlay.classList.add('visible');
-            } 
-            // If student is null, markStudentPresent already showed a toast,
-            // so we just keep scanning.
+            }
+            // --- SCANNER IS NO LONGER STOPPED ---
         }
 
         /**
-         * NEW: QR Scan Failure Callback
+         * QR Scan Failure Callback
          */
         function onScanFailure(error) {
             // This fires constantly, so we'll just log warnings
@@ -812,13 +762,12 @@
         }
 
         /**
-         * NEW: Starts the camera
+         * Starts the camera
          */
         function startScanner() {
             if (isScannerActive) return; // Already running
 
-            // Hide overlay before starting
-            scanOverlay.classList.remove('visible');
+            // Overlay logic removed
 
             const config = { 
                 fps: 10, 
@@ -841,7 +790,7 @@
         }
 
         /**
-         * NEW: Stops the camera
+         * Stops the camera
          */
         function stopScanner() {
             if (!isScannerActive) return; // Already stopped
@@ -862,7 +811,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadPageData();
 
-            // --- NEW: Initialize Scanner & Beep ---
+            // Initialize Scanner & Beep
             html5QrCode = new Html5Qrcode("qr-reader");
             
             // Create a simple, short beep sound
@@ -883,7 +832,7 @@
                     gainNode.gain.setValueAtTime(0.5, audioContext.currentTime); // Volume
                     
                     oscillator.start();
-                    oscillator.stop(audioContext.currentTime + 0.05); // <-- Shorter duration (0.05s)
+                    oscillator.stop(audioContext.currentTime + 0.05); // Short duration
                 }
             };
         });
@@ -909,8 +858,7 @@
         // Submit button
         submitBtn.addEventListener('click', handleSubmitAttendance);
 
-        // --- NEW: Scanner "Scan Again" Button ---
-        scanAgainBtn.addEventListener('click', startScanner);
+        // "Scan Again" button listener removed
 
     </script>
 
