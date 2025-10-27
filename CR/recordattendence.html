@@ -1,1 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Attendance</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* -------------------
+         * Global Reset & Setup
+         * ------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            height: 100%;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0e5ec;
+            color: #1a202c;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+            font-size: 20px;
+        }
+
+        /* -------------------
+         * App Layout
+         * ------------------- */
+        .app-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff; /* White background for this page */
+        }
+        .main-content {
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 24px 20px 180px 20px; /* Padding for header AND submit button */
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
+        }
+        .main-content::-webkit-scrollbar { display: none; }
+
+        /* -------------------
+         * Header
+         * ------------------- */
+        header {
+            padding: 24px 20px 20px 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .header-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .header-top .back-btn {
+            font-size: 28px;
+            font-variation-settings: 'wght' 500;
+            cursor: pointer;
+        }
+        .header-top h1 {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        .header-bottom {
+            display: flex;
+            gap: 16px;
+            font-size: 14px;
+            color: #475569;
+            font-weight: 500;
+        }
+        .header-bottom .info-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-bottom .info-item .material-symbols-outlined {
+            font-size: 18px;
+        }
+
+        /* -------------------
+         * Toggle Switch
+         * ------------------- */
+        .toggle-switch {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background-color: #f1f5f9;
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .toggle-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px;
+            border: none;
+            border-radius: 9px;
+            background-color: transparent;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+        }
+        .toggle-btn.active {
+            background-color: #ffffff;
+            color: #4f46e5;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+        .toggle-btn .material-symbols-outlined {
+            font-size: 18px;
+            font-variation-settings: 'wght' 500;
+        }
+        
+        /* Tab Content */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* -------------------
+         * Manual Entry: Search
+         * ------------------- */
+        .search-bar {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-bar .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 22px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 12px 16px 12px 48px; /* Space for icon */
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            background-color: #ffffff;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            color: #1a202c;
+        }
+        .search-bar input:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        /* -------------------
+         * Manual Entry: Student List
+         * ------------------- */
+        .student-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .student-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background-color: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(149, 157, 165, 0.05);
+        }
+        .student-item .student-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        /* Custom Checkbox */
+        .student-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background-color: #f1f5f9;
+            border-radius: 50%;
+            border: 2px solid #e2e8f0;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .student-item input[type="checkbox"]:checked {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+        }
+        .student-item input[type="checkbox"]:checked::after {
+            content: '\e5ca'; /* Check mark icon */
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 16px;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+            -webkit-font-smoothing: antialiased;
+            color: white;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            font-variation-settings: 'wght' 700;
+        }
+
+        /* -------------------
+         * QR Scanner Tab
+         * ------------------- */
+        .qr-scanner-content {
+            text-align: center;
+            padding: 30px 10px;
+            border: 1px dashed #cbd5e1;
+            border-radius: 12px;
+            background-color: #f8fafc;
+        }
+        .qr-scanner-content .qr-icon {
+            font-size: 80px;
+            color: #4f46e5;
+        }
+        .qr-scanner-content p {
+            font-size: 14px;
+            color: #475569;
+            margin-top: 12px;
+        }
+
+        /* -------------------
+         * Fixed Submit Button
+         * ------------------- */
+        .submit-footer {
+            position: fixed;
+            bottom: 80px; /* Above the 80px bottom-nav */
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            background-image: linear-gradient(to top, #ffffff 70%, rgba(255,255,255,0));
+            z-index: 900;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .submit-btn:disabled {
+            background-image: none;
+            background-color: #cbd5e1;
+            cursor: wait;
+        }
+
+        /* -------------------
+         * Bottom Navigation
+         * ------------------- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffff; 
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 10px 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid #e2e8f0;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            z-index: 1000;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #718096; 
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 26px;
+            margin-bottom: 2px;
+        }
+        .nav-item.active { color: #4f46e5; }
+        .nav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+        
+        /* -------------------
+         * Toast Notification
+         * ------------------- */
+        .toast {
+            visibility: hidden;
+            opacity: 0;
+            position: fixed; 
+            bottom: 100px; 
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 2000; 
+            transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
+            white-space: nowrap;
+        }
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 110px; 
+        }
+        
+        /* -------------------
+         * Desktop Media Query
+         * ------------------- */
+        @media (min-width: 500px) {
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 16px 0;
+            }
+            .app-container {
+                max-width: 450px;
+                height: 95vh;
+                max-height: 850px;
+                border-radius: 24px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+                border: 1px solid #f8f9fa;
+                position: relative; 
+                overflow: hidden; 
+            }
+            .bottom-nav {
+                border-bottom-left-radius: 24px;
+                border-bottom-right-radius: 24px;
+            }
+            .submit-footer {
+                /* Constrain to app container */
+                width: 100%;
+                max-width: 450px;
+                bottom: 80px;
+                border-radius: 24px;
+            }
+            .toast {
+                /* Position within the app container */
+                position: absolute;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <header>
+            <div class="header-top">
+                <span class="material-symbols-outlined back-btn">arrow_back</span>
+                <h1 id="lecture-subject">Loading...</h1>
+            </div>
+            <div class="header-bottom">
+                <div class="info-item">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                    <span id="lecture-date">--/--/----</span>
+                </div>
+                <div class="info-item">
+                    <span class="material-symbols-outlined">schedule</span>
+                    <span id="lecture-time">--:--</span>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
+
+            <div class="toggle-switch">
+                <button class="toggle-btn active" id="btn-manual" data-tab="manual-entry">
+                    <span class="material-symbols-outlined">edit_note</span>
+                    Manual Entry
+                </button>
+                <button class="toggle-btn" id="btn-qr" data-tab="qr-scanner">
+                    <span class="material-symbols-outlined">qr_code_scanner</span>
+                    QR Scanner
+                </button>
+            </div>
+
+            <div id="manual-entry" class="tab-content active">
+                <div class="search-bar">
+                    <span class="material-symbols-outlined icon">search</span>
+                    <input type="text" id="search-input" placeholder="Search by name...">
+                </div>
+                <div class="student-list" id="student-list-container">
+                    </div>
+            </div>
+
+            <div id="qr-scanner" class="tab-content">
+                <div class="qr-scanner-content">
+                    <span class="material-symbols-outlined qr-icon">qr_code_2</span>
+                    <p>QR Scanner functionality coming soon.</p>
+                </div>
+            </div>
+
+        </main>
+
+        <div class="submit-footer" id="submit-footer">
+            <button class="submit-btn" id="submit-btn">Submit Attendance (0/0)</button>
+        </div>
+
+        <nav class="bottom-nav">
+            <a href="index.html" class="nav-item">
+                <span class="material-symbols-outlined">home</span>
+                Home
+            </a>
+            <a href="record.html" class="nav-item active">
+                <span class="material-symbols-outlined">playlist_add_check</span>
+                Record
+            </a>
+            <a href="students.html" class="nav-item">
+                <span class="material-symbols-outlined">groups</span>
+                Students
+            </a>
+            <a href="analytics.html" class="nav-item">
+                <span class="material-symbols-outlined">bar_chart</span>
+                Analytics
+            </a>
+        </nav>
+
+        <div id="toast" class="toast">
+            <span id="toast-message">This is a toast message!</span>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. SUPABASE SETUP ---
+        const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- 2. GLOBAL VARIABLES ---
+        let toastTimer;
+        let currentLecture = null;
+        let allStudents = [];
+        let attendanceRecords = new Map(); // Use a Map for efficient lookups
+        let currentLectureId = null;
+
+        // --- 3. DOM ELEMENTS ---
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+        const studentListContainer = document.getElementById('student-list-container');
+        const searchInput = document.getElementById('search-input');
+        const submitBtn = document.getElementById('submit-btn');
+        const manualTab = document.getElementById('manual-entry');
+        const qrTab = document.getElementById('qr-scanner');
+        const btnManual = document.getElementById('btn-manual');
+        const btnQr = document.getElementById('btn-qr');
+        const submitFooter = document.getElementById('submit-footer');
+
+        // --- 4. CORE FUNCTIONS ---
+
+        function showToast(message, isError = false) {
+            if (toastTimer) clearTimeout(toastTimer);
+            toastMessage.textContent = message;
+            toast.style.backgroundColor = isError ? '#e53e3e' : '#333'; // Red for error
+            toast.classList.add('show');
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+                toastTimer = null;
+            }, 3000); 
+        }
+
+        // --- Formatting Helpers ---
+        function formatTime(timeString) {
+            if (!timeString) return 'N/A';
+            const [hours, minutes] = timeString.split(':');
+            const d = new Date();
+            d.setHours(parseInt(hours));
+            d.setMinutes(parseInt(minutes));
+            return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+         function formatDate(dateString) {
+             if (!dateString) return 'N/A';
+             const [year, month, day] = dateString.split('-');
+             return `${day}/${month}/${year}`;
+         }
+
+        /**
+         * Loads all necessary data on page load
+         */
+        async function loadPageData() {
+            try {
+                // 1. Get Lecture ID from URL
+                const params = new URLSearchParams(window.location.search);
+                currentLectureId = params.get('lecture_id');
+                if (!currentLectureId) {
+                    showToast('No lecture ID found!', true);
+                    return;
+                }
+
+                // 2. Get Lecture Details
+                const { data: lecture, error: lectureError } = await _supabase
+                    .from('lectures')
+                    .select('*')
+                    .eq('lecture_id', currentLectureId)
+                    .single();
+                
+                if (lectureError) throw new Error('Could not fetch lecture details.');
+                currentLecture = lecture;
+                updateHeader(lecture);
+
+                // 3. Get all students for this lecture's course
+                const { data: students, error: studentError } = await _supabase
+                    .from('students')
+                    .select('student_id, name') // Only fetch what we need
+                    .eq('course', lecture.course)
+                    .order('name', { ascending: true });
+
+                if (studentError) throw new Error('Could not fetch students.');
+                allStudents = students;
+
+                // 4. Get existing attendance records
+                const { data: records, error: recordError } = await _supabase
+                    .from('attendance_records')
+                    .select('student_id, status')
+                    .eq('lecture_id', currentLectureId)
+                    .eq('type', 'lecture');
+                
+                if (recordError) throw new Error('Could not fetch attendance records.');
+                
+                // Store records in a Map for fast O(1) lookup
+                attendanceRecords = new Map(records.map(r => [r.student_id, r.status]));
+
+                // 5. Render the list
+                renderStudentList();
+
+            } catch (error) {
+                console.error('Error loading page data:', error.message);
+                showToast(error.message, true);
+            }
+        }
+
+        /**
+         * Populates the header with lecture info
+         */
+        function updateHeader(lecture) {
+            document.getElementById('lecture-subject').textContent = lecture.subject_name;
+            document.getElementById('lecture-date').textContent = formatDate(lecture.date);
+            document.getElementById('lecture-time').textContent = 
+                `${formatTime(lecture.start_time)} - ${formatTime(lecture.end_time)}`;
+        }
+
+        /**
+         * Renders the student list into the container
+         */
+        function renderStudentList() {
+            studentListContainer.innerHTML = ''; // Clear existing
+            
+            if (allStudents.length === 0) {
+                studentListContainer.innerHTML = '<p style="text-align:center; color: #718096;">No students found for this course.</p>';
+                return;
+            }
+
+            allStudents.forEach(student => {
+                // Check if student was marked present
+                const isPresent = attendanceRecords.get(student.student_id) === true;
+                
+                const item = document.createElement('div');
+                item.className = 'student-item';
+                item.innerHTML = `
+                    <span class="student-name">${student.name}</span>
+                    <input type="checkbox" 
+                           class="attendance-checkbox" 
+                           data-student-id="${student.student_id}" 
+                           ${isPresent ? 'checked' : ''}>
+                `;
+                studentListContainer.appendChild(item);
+            });
+            
+            updateSubmitButtonCount(); // Update count after rendering
+        }
+
+        /**
+         * Updates the text on the submit button
+         */
+        function updateSubmitButtonCount() {
+            const totalStudents = allStudents.length;
+            const presentStudents = studentListContainer.querySelectorAll('.attendance-checkbox:checked').length;
+            submitBtn.textContent = `Submit Attendance (${presentStudents}/${totalStudents})`;
+        }
+
+        /**
+         * Handles the click on the submit button
+         */
+        async function handleSubmitAttendance() {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+
+            const checkboxes = studentListContainer.querySelectorAll('.attendance-checkbox');
+            const recordsToUpsert = [];
+            const now = new Date().toISOString();
+
+            checkboxes.forEach(cb => {
+                recordsToUpsert.push({
+                    student_id: cb.dataset.studentId,
+                    lecture_id: currentLectureId,
+                    type: 'lecture',
+                    status: cb.checked, // true if present, false if absent
+                    marked_at: now
+                });
+            });
+
+            try {
+                // Use upsert to insert new records or update existing ones
+                const { error } = await _supabase
+                    .from('attendance_records')
+                    .upsert(recordsToUpsert, {
+                        onConflict: 'student_id, lecture_id, type' // Assumes a unique constraint on these
+                    });
+                
+                if (error) throw error;
+
+                showToast('Attendance submitted successfully! 🎉');
+                
+                // Update the local map with new statuses
+                recordsToUpsert.forEach(r => attendanceRecords.set(r.student_id, r.status));
+
+            } catch (error) {
+                console.error('Error submitting attendance:', error.message);
+                showToast(`Error: ${error.message}`, true);
+            } finally {
+                submitBtn.disabled = false;
+                updateSubmitButtonCount(); // Reset button text
+            }
+        }
+
+        /**
+         * Filters the student list based on search input
+         */
+        function filterStudentList() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const students = studentListContainer.querySelectorAll('.student-item');
+            
+            students.forEach(student => {
+                const name = student.querySelector('.student-name').textContent.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    student.style.display = 'flex';
+                } else {
+                    student.style.display = 'none';
+                }
+            });
+        }
+
+        /**
+         * Handles tab switching
+         */
+        function switchTab(tabName) {
+            if (tabName === 'manual-entry') {
+                manualTab.classList.add('active');
+                qrTab.classList.remove('active');
+                btnManual.classList.add('active');
+                btnQr.classList.remove('active');
+                submitFooter.style.display = 'block'; // Show submit button
+            } else if (tabName === 'qr-scanner') {
+                manualTab.classList.remove('active');
+                qrTab.classList.add('active');
+                btnManual.classList.remove('active');
+                btnQr.classList.add('active');
+                submitFooter.style.display = 'none'; // Hide submit button
+            }
+        }
+
+        // --- 5. EVENT LISTENERS ---
+
+        // Load all data when the page is ready
+        document.addEventListener('DOMContentLoaded', loadPageData);
+
+        // Back button
+        document.querySelector('.back-btn').addEventListener('click', () => {
+            window.history.back(); 
+        });
+
+        // Tab switching
+        btnManual.addEventListener('click', () => switchTab('manual-entry'));
+        btnQr.addEventListener('click', () => switchTab('qr-scanner'));
+
+        // Search bar
+        searchInput.addEventListener('input', filterStudentList);
+
+        // Listen for checkbox changes to update count (using event delegation)
+        studentListContainer.addEventListener('change', (e) => {
+            if (e.target.classList.contains('attendance-checkbox')) {
+                updateSubmitButtonCount();
+            }
+        });
+
+        // Submit button
+        submitBtn.addEventListener('click', handleSubmitAttendance);
+
+    </script>
+
+</body>
+</html>
