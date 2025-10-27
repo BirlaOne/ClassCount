@@ -14,328 +14,298 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* -------------------
-         * Global Reset & Setup
-         * ------------------- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+      /* -------------------
+ * Global Reset & Setup
+ * ------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        html, body {
-            height: 100%;
-            overflow: hidden; /* <-- CHANGED: Prevents bouncing on mobile */
-        }
+html, body {
+    height: 100%;
+}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #e0e5ec;
-            color: #1a202c;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-        }
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #e0e5ec;
+    color: #1a202c;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
 
-        /* -------------------
-         * Icon Styling
-         * ------------------- */
-        .material-symbols-outlined {
-            font-variation-settings:
-                'FILL' 0,
-                'wght' 400,
-                'GRAD' 0,
-                'opsz' 24;
-            vertical-align: middle;
-            font-size: 20px;
-        }
+/* -------------------
+ * Icon Styling
+ * ------------------- */
+.material-symbols-outlined {
+    font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24;
+    vertical-align: middle;
+    font-size: 20px;
+}
 
-        /* -------------------
-         * App Layout
-         * ------------------- */
-        .app-container {
-            width: 100%;
-            height: 100vh; /* <-- CHANGED: Use 100vh or 100dvh */
-            display: flex;
-            flex-direction: column;
-            background-color: #f4f7fa; 
-            overflow: hidden; /* <-- CHANGED: Prevents container from scrolling */
-        }
+/* -------------------
+ * App Layout
+ * ------------------- */
+.app-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f4f7fa;
+}
 
-        .main-content {
-            flex-grow: 1; 
-            overflow-y: auto; /* Allow content to scroll */
-            padding: 24px 20px; /* <-- CHANGED: Removed 100px bottom padding */
-            
-            /* Add some space at the end of the scroll */
-            padding-bottom: 40px; 
-            
-            /* --- Hide scrollbar --- */
-            scrollbar-width: none; 
-            -ms-overflow-style: none; 
-        }
-        
-        .main-content::-webkit-scrollbar {
-            display: none;
-        }
-        /* --- End Hide scrollbar --- */
+/* Allow content to scroll */
+.main-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px 20px 100px 20px; /* extra bottom padding for fixed nav */
 
-        /* -------------------
-         * Header
-         * ------------------- */
-        header {
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #1a202c; 
-        }
-        
-        header .back-btn {
-            font-size: 28px;
-            font-variation-settings: 'wght' 500;
-            cursor: pointer;
-        }
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+.main-content::-webkit-scrollbar {
+    display: none;
+}
 
-        header .header-text h1 {
-            font-size: 24px;
-            font-weight: 700;
-            line-height: 1.2;
-        }
+/* -------------------
+ * Header
+ * ------------------- */
+header {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #1a202c;
+}
+header .back-btn {
+    font-size: 28px;
+    font-variation-settings: 'wght' 500;
+    cursor: pointer;
+}
+header .header-text h1 {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+header .header-text p {
+    font-size: 16px;
+    color: #718096;
+    font-weight: 500;
+}
 
-        header .header-text p {
-            font-size: 16px;
-            color: #718096;
-            font-weight: 500;
-        }
+/* -------------------
+ * General Card Style
+ * ------------------- */
+.card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+    border: 1px solid #f1f1f1;
+}
 
-        /* -------------------
-         * General Card Style
-         * ------------------- */
-         .card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
-            border: 1px solid #f1f1f1;
-        }
+/* -------------------
+ * Form Styles
+ * ------------------- */
+.form-group {
+    margin-bottom: 20px;
+}
+.form-group label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: #475569;
+}
 
-        /* -------------------
-         * Form Styles
-         * ------------------- */
-        .form-group {
-            margin-bottom: 20px;
-        }
+/* Style for input and select */
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background-color: #ffffff;
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    color: #1a202c;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-group select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23718096'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    background-size: 24px;
+    padding-right: 48px;
+}
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+.form-group input::placeholder {
+    color: #94a3b8;
+}
+.form-group input:disabled,
+.form-group select:disabled {
+    background-color: #f1f5f9;
+    color: #718096;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+.submit-btn:active {
+    transform: scale(0.98);
+}
+.submit-btn:disabled {
+    background-image: none;
+    background-color: #cbd5e1;
+    cursor: wait;
+}
 
-        .form-group label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: #475569;
-        }
+/* -------------------
+ * Note Card
+ * ------------------- */
+.note-card {
+    background-color: #f5f3ff;
+    border: 1px solid #e0e7ff;
+    box-shadow: none;
+    padding: 20px;
+}
+.note-card h3 {
+    font-weight: 600;
+    font-size: 16px;
+    margin-bottom: 12px;
+    color: #1a202c;
+}
+.note-card ul {
+    list-style-type: disc;
+    list-style-position: inside;
+    padding-left: 0;
+    color: #475569;
+    font-size: 14px;
+}
+.note-card li {
+    margin-bottom: 8px;
+}
+.note-card li:last-child {
+    margin-bottom: 0;
+}
 
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            background-color: #ffffff;
-            font-size: 16px;
-            font-family: 'Inter', sans-serif;
-            font-weight: 500;
-            color: #1a202c;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        
-        .form-group select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23718096'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 16px center;
-            background-size: 24px;
-            padding-right: 48px; 
-        }
+/* -------------------
+ * Bottom Navigation (FIXED)
+ * ------------------- */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0 10px 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    border-top: 1px solid #e2e8f0;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    z-index: 1000;
+}
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #718096;
+    font-size: 12px;
+    font-weight: 500;
+}
+.nav-item .material-symbols-outlined {
+    font-size: 26px;
+    margin-bottom: 2px;
+}
 
-        .form-group input:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-        }
+/* -------------------
+ * Toast Notification
+ * ------------------- */
+.toast {
+    visibility: hidden;
+    opacity: 0;
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 2000;
+    transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
+    white-space: nowrap;
+}
+.toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 110px;
+}
 
-        .form-group input::placeholder {
-            color: #94a3b8;
-        }
-        
-        .form-group input:disabled,
-        .form-group select:disabled {
-            background-color: #f1f5f9;
-            color: #718096;
-            cursor: not-allowed;
-            border-color: #e2e8f0;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 12px;
-            background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-top: 8px;
-        }
-        
-        .submit-btn:active {
-            transform: scale(0.98);
-        }
+/* -------------------
+ * Mobile-Friendly Media Query
+ * ------------------- */
+@media (min-width: 500px) {
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 16px 0;
+    }
+    .app-container {
+        max-width: 450px;
+        height: 95vh;
+        max-height: 850px;
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        border: 1px solid #f8f9fa;
+        position: relative;
+        overflow: hidden;
+    }
+    .bottom-nav {
+        border-bottom-left-radius: 24px;
+        border-bottom-right-radius: 24px;
+    }
+}
 
-        .submit-btn:disabled {
-            background-image: none;
-            background-color: #cbd5e1;
-            cursor: wait;
-        }
-
-        /* -------------------
-         * Note Card
-         * ------------------- */
-        .note-card {
-            background-color: #f5f3ff;
-            border: 1px solid #e0e7ff;
-            box-shadow: none;
-            padding: 20px;
-        }
-        
-        .note-card h3 {
-            font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: #1a202c;
-        }
-        
-        .note-card ul {
-            list-style-type: disc;
-            list-style-position: inside;
-            padding-left: 0;
-            color: #475569;
-            font-size: 14px;
-        }
-        
-        .note-card li {
-            margin-bottom: 8px;
-        }
-        
-        .note-card li:last-child {
-            margin-bottom: 0;
-        }
-
-
-        /* -------------------
-         * Bottom Navigation
-         * ------------------- */
-        .bottom-nav {
-            flex-shrink: 0; 
-            background-color: #ffffff; 
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0 10px 0;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-            border-top: 1px solid #e2e8f0;
-            
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-        }
-
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #718096; 
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .nav-item .material-symbols-outlined {
-            font-size: 26px;
-            margin-bottom: 2px;
-        }
-        
-        
-        /* -------------------
-         * Toast Notification
-         * ------------------- */
-        .toast {
-            visibility: hidden;
-            opacity: 0;
-            position: absolute; 
-            bottom: 100px; 
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 10;
-            transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
-            white-space: nowrap;
-        }
-
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 110px; 
-        }
-
-        
-        /* -------------------
-         * Desktop Media Query
-         * ------------------- */
-         
-        @media (min-width: 500px) {
-            body {
-                /* Re-enable scrolling for desktop view if needed, 
-                   but center the app */
-                overflow: auto; /* <-- CHANGED */
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 16px 0;
-            }
-            
-            .app-container {
-                /* This was already correct, using fixed height */
-                max-width: 450px;
-                height: 95vh;
-                max-height: 850px;
-                border-radius: 24px;
-                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-                border: 1px solid #f8f9fa;
-                position: relative; 
-                overflow: hidden; 
-            }
-            
-            .bottom-nav {
-                border-bottom-left-radius: 24px;
-                border-bottom-right-radius: 24px;
-            }
-        }
 
     </style>
 </head>
@@ -458,7 +428,7 @@
         // --- 2. GLOBAL VARIABLES ---
         let currentUserProfile = null; 
         let subjectData = [];          
-        let toastTimer; 
+        let toastTimer; // <-- NEW: For managing toast timeout
 
         // --- 3. DOM ELEMENTS ---
         const subjectSelect = document.getElementById('subject');
@@ -469,34 +439,49 @@
         const endTimeInput = document.getElementById('end-time');
         const lectureForm = document.getElementById('lecture-form');
         const submitBtn = document.getElementById('submit-btn');
+        // --- NEW: Toast Elements ---
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toast-message');
 
 
         // --- 4. CORE FUNCTIONS ---
 
+        /**
+         * NEW: Shows a toast notification
+         */
         function showToast(message) {
+            // Clear any existing timer
             if (toastTimer) {
                 clearTimeout(toastTimer);
             }
+
+            // Set message and show toast
             toastMessage.textContent = message;
             toast.classList.add('show');
+
+            // Set new timer to hide toast
             toastTimer = setTimeout(() => {
                 toast.classList.remove('show');
                 toastTimer = null;
-            }, 3000); 
+            }, 3000); // 3 seconds
         }
 
+        /**
+         * Gets the current auth user, then fetches their profile from 'users'
+         * and triggers the loading of subjects.
+         */
         async function checkUserAndLoadData() {
             try {
+                // Get user from Supabase Auth
                 const { data: { user }, error: authError } = await _supabase.auth.getUser();
 
                 if (authError) throw authError;
                 if (!user) {
-                    showToast('You are not logged in.'); 
+                    showToast('You are not logged in.'); // <-- REPLACED alert
                     return;
                 }
 
+                // Get user profile from 'users' table
                 const { data: profile, error: profileError } = await _supabase
                     .from('users') 
                     .select('*')
@@ -508,22 +493,29 @@
                     throw new Error(`Could not find user profile.`);
                 }
                 if (!profile) {
-                    showToast('Could not find user profile.'); 
+                    showToast('Could not find user profile.'); // <-- REPLACED alert
                     return;
                 }
 
                 currentUserProfile = profile; 
 
+                // 1. Populate the disabled 'Class' field
                 classInput.value = currentUserProfile.course.toUpperCase();
+
+                // 2. Load subjects for that user's course
                 await loadSubjects(currentUserProfile.course);
 
             } catch (error) {
                 console.error('Error loading user data:', error.message);
-                showToast(`Error: ${error.message}`); 
+                showToast(`Error: ${error.message}`); // <-- REPLACED alert
                 subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</option>`;
             }
         }
 
+        /**
+         * Fetches subjects from the 'subjects' table based on the user's course
+         * and populates the subject dropdown.
+         */
         async function loadSubjects(course) {
             try {
                 const { data, error } = await _supabase
@@ -534,6 +526,7 @@
                 if (error) throw error;
 
                 subjectData = data; 
+
                 subjectSelect.innerHTML = ''; 
                 
                 const defaultOption = document.createElement('option');
@@ -553,16 +546,19 @@
 
             } catch (error) {
                 console.error('Error loading subjects:', error.message);
-                showToast('Error loading subjects'); 
+                showToast('Error loading subjects'); // <-- REPLACED alert (implicit)
                 subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</option>`;
             }
         }
 
+        /**
+         * Handles the form submission to create a new lecture.
+         */
         async function handleFormSubmit(event) {
             event.preventDefault(); 
 
             if (!currentUserProfile) {
-                showToast('User profile not loaded. Please refresh.'); 
+                showToast('User profile not loaded. Please refresh.'); // <-- REPLACED alert
                 return;
             }
 
@@ -577,7 +573,7 @@
             };
 
             if (!newLecture.subject_name || !newLecture.date || !newLecture.start_time || !newLecture.end_time) {
-                showToast('Please fill out all fields.'); 
+                showToast('Please fill out all fields.'); // <-- REPLACED alert
                 return;
             }
 
@@ -591,7 +587,7 @@
 
                 if (error) throw error;
 
-                showToast('Lecture scheduled successfully! 🎉'); 
+                showToast('Lecture scheduled successfully! 🎉'); // <-- REPLACED alert
                 lectureForm.reset(); 
                 professorInput.value = ''; 
                 classInput.value = currentUserProfile.course.toUpperCase(); 
@@ -599,7 +595,7 @@
 
             } catch (error) {
                 console.error('Error scheduling lecture:', error.message);
-                showToast(`Error: ${error.message}`); 
+                showToast(`Error: ${error.message}`); // <-- REPLACED alert
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Schedule Lecture';
