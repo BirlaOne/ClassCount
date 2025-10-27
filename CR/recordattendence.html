@@ -624,45 +624,43 @@
             submitBtn.textContent = `Submit Attendance (${presentStudents}/${totalStudents})`;
         }
 
-        async function handleSubmitAttendance() {
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
+       async function handleSubmitAttendance() {
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Submitting...';
 
-            const checkboxes = studentListContainer.querySelectorAll('.attendance-checkbox');
-            const recordsToUpsert = [];
-            const now = new Date().toISOString();
+  const checkboxes = studentListContainer.querySelectorAll('.attendance-checkbox');
+  const recordsToUpsert = [];
+  const now = new Date().toISOString();
 
-            checkboxes.forEach(cb => {
-                recordsToUpsert.push({
-                    student_id: parseInt(cb.dataset.studentId), 
-                    lecture_id: parseInt(currentLectureId), 
-                    type: 'lecture',
-                    status: cb.checked, 
-                    marked_at: now
-                });
-            });
+  checkboxes.forEach(cb => {
+    recordsToUpsert.push({
+      student_id: parseInt(cb.dataset.studentId),
+      lecture_id: parseInt(currentLectureId),
+      type: 'lecture',  // ✅ must match ENUM in DB
+      status: cb.checked,
+      marked_at: now
+    });
+  });
 
-            try {
-                const { error } = await _supabase
-                    .from('attendance_records')
-                    .upsert(recordsToUpsert, {
-                        onConflict: 'student_id, lecture_id, type' 
-                    });
-                
-                if (error) throw error;
+  try {
+    const { error } = await _supabase
+      .from('attendance_records')
+      .upsert(recordsToUpsert, {
+        onConflict: ['student_id', 'lecture_id', 'type']  // ✅ must match SQL constraint
+      });
 
-                showToast('Attendance submitted successfully! 🎉');
-                
-                recordsToUpsert.forEach(r => attendanceRecords.set(r.student_id, r.status));
+    if (error) throw error;
 
-            } catch (error) {
-                console.error('Error submitting attendance:', error.message);
-                showToast(`Error: ${error.message}`, true);
-            } finally {
-                submitBtn.disabled = false;
-                updateSubmitButtonCount(); 
-            }
-        }
+    showToast('Attendance submitted successfully! 🎉');
+  } catch (error) {
+    console.error('Error submitting attendance:', error.message);
+    showToast(`Error: ${error.message}`, true);
+  } finally {
+    submitBtn.disabled = false;
+    updateSubmitButtonCount();
+  }
+}
+
 
         function filterStudentList() {
             const searchTerm = searchInput.value.toLowerCase();
