@@ -56,14 +56,14 @@
             min-height: 100vh; /* Use min-height for full screen */
             display: flex;
             flex-direction: column;
-            /* Page background is light gray */
             background-color: #f4f7fa; 
-            position: relative;
-            overflow: hidden; /* Hide overflow */
+            /* FIX: Removed position:relative and overflow:hidden 
+              to allow a pure flex-box layout.
+            */
         }
 
         .main-content {
-            flex-grow: 1;
+            flex-grow: 1; /* <-- FIX: Makes content grow to fill space */
             overflow-y: auto; /* Allow content to scroll */
             padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
             
@@ -86,7 +86,6 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            /* Need to set color, as bg is not white */
             color: #1a202c; 
         }
         
@@ -249,13 +248,13 @@
 
 
         /* -------------------
-         * Bottom Navigation (UPDATED)
+         * Bottom Navigation (FIXED)
          * ------------------- */
         .bottom-nav {
-            position: absolute; 
-            bottom: 0;
-            left: 0;
-            right: 0;
+            /* FIX: Removed position:absolute and related properties.
+              This will now be positioned by the flex-container parent.
+            */
+            flex-shrink: 0; /* <-- FIX: Prevents nav from shrinking */
             background-color: #ffffff; 
             display: flex;
             justify-content: space-around;
@@ -272,7 +271,6 @@
             flex-direction: column;
             align-items: center;
             text-decoration: none;
-            /* All items are inactive */
             color: #718096; 
             font-size: 12px;
             font-weight: 500;
@@ -282,17 +280,41 @@
             margin-bottom: 2px;
         }
         
-        /* NO .active styles needed */
         
+        /* -------------------
+         * NEW: Toast Notification
+         * ------------------- */
+        .toast {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute; /* Positioned relative to app-container */
+            bottom: 100px; /* Sits above the bottom nav */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10;
+            transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 110px; /* Animate upwards slightly */
+        }
+
         
         /* -------------------
          * Mobile-Friendly Media Query
          * ------------------- */
          
-        /* On screens 500px or wider (desktops), simulate a phone */
         @media (min-width: 500px) {
             body {
-                /* Center the app on desktop */
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -300,19 +322,18 @@
             }
             
             .app-container {
-                /* Constrain the width and height */
                 max-width: 450px;
                 height: 95vh;
                 max-height: 850px;
-                
-                /* Add rounded corners and shadow */
                 border-radius: 24px;
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
                 border: 1px solid #f8f9fa;
+                /* This is new/important for positioning toast */
+                position: relative; 
+                overflow: hidden; 
             }
             
             .bottom-nav {
-                /* Add rounded corners to match the app container */
                 border-bottom-left-radius: 24px;
                 border-bottom-right-radius: 24px;
             }
@@ -344,7 +365,7 @@
                         </label>
                         <select id="subject" required>
                             <option value="" disabled selected>Loading subjects...</option>
-                            </select>
+                        </select>
                     </div>
                     
                     <div class="form-group">
@@ -422,11 +443,14 @@
             </a>
         </nav>
 
+        <div id="toast" class="toast">
+            <span id="toast-message">This is a toast message!</span>
+        </div>
+
     </div>
 
     <script>
         // --- 1. SUPABASE SETUP ---
-        // User's Supabase credentials
         const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
 
@@ -434,8 +458,9 @@
         const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- 2. GLOBAL VARIABLES ---
-        let currentUserProfile = null; // To store user's profile from 'users'
-        let subjectData = [];          // To store fetched subjects
+        let currentUserProfile = null; 
+        let subjectData = [];          
+        let toastTimer; // <-- NEW: For managing toast timeout
 
         // --- 3. DOM ELEMENTS ---
         const subjectSelect = document.getElementById('subject');
@@ -446,8 +471,32 @@
         const endTimeInput = document.getElementById('end-time');
         const lectureForm = document.getElementById('lecture-form');
         const submitBtn = document.getElementById('submit-btn');
+        // --- NEW: Toast Elements ---
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+
 
         // --- 4. CORE FUNCTIONS ---
+
+        /**
+         * NEW: Shows a toast notification
+         */
+        function showToast(message) {
+            // Clear any existing timer
+            if (toastTimer) {
+                clearTimeout(toastTimer);
+            }
+
+            // Set message and show toast
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+
+            // Set new timer to hide toast
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+                toastTimer = null;
+            }, 3000); // 3 seconds
+        }
 
         /**
          * Gets the current auth user, then fetches their profile from 'users'
@@ -460,28 +509,27 @@
 
                 if (authError) throw authError;
                 if (!user) {
-                    alert('You are not logged in. Redirecting to login page...');
-                    // window.location.href = '/login.html'; // Uncomment to redirect
+                    showToast('You are not logged in.'); // <-- REPLACED alert
                     return;
                 }
 
                 // Get user profile from 'users' table
                 const { data: profile, error: profileError } = await _supabase
-                    .from('users') // <-- CORRECTED TABLE NAME
+                    .from('users') 
                     .select('*')
                     .eq('auth_id', user.id)
                     .single();
                 
                 if (profileError) {
                     console.error('Profile Error:', profileError);
-                    throw new Error(`Could not find user profile. Make sure a row in 'users' matches the auth_id. \nError: ${profileError.message}`);
+                    throw new Error(`Could not find user profile.`);
                 }
                 if (!profile) {
-                    alert('Could not find user profile.');
+                    showToast('Could not find user profile.'); // <-- REPLACED alert
                     return;
                 }
 
-                currentUserProfile = profile; // Store profile globally
+                currentUserProfile = profile; 
 
                 // 1. Populate the disabled 'Class' field
                 classInput.value = currentUserProfile.course.toUpperCase();
@@ -491,7 +539,7 @@
 
             } catch (error) {
                 console.error('Error loading user data:', error.message);
-                alert(`Error: ${error.message}`);
+                showToast(`Error: ${error.message}`); // <-- REPLACED alert
                 subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</option>`;
             }
         }
@@ -503,18 +551,16 @@
         async function loadSubjects(course) {
             try {
                 const { data, error } = await _supabase
-                    .from('subjects') // <-- CORRECTED TABLE NAME
+                    .from('subjects') 
                     .select('subject_name, professor_name')
                     .eq('course', course);
 
                 if (error) throw error;
 
-                subjectData = data; // Store data for later use
+                subjectData = data; 
 
-                // Clear "loading" option
                 subjectSelect.innerHTML = ''; 
                 
-                // Add default "select" option
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
                 defaultOption.textContent = 'Select a subject...';
@@ -522,19 +568,18 @@
                 defaultOption.selected = true;
                 subjectSelect.appendChild(defaultOption);
 
-                // Add each subject as an option
                 subjectData.forEach(subject => {
                     const option = document.createElement('option');
                     option.value = subject.subject_name;
                     option.textContent = subject.subject_name;
-                    // Store professor name in a data attribute
                     option.dataset.professor = subject.professor_name;
                     subjectSelect.appendChild(option);
                 });
 
             } catch (error) {
                 console.error('Error loading subjects:', error.message);
-                subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</okption>`;
+                showToast('Error loading subjects'); // <-- REPLACED alert (implicit)
+                subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</option>`;
             }
         }
 
@@ -542,54 +587,48 @@
          * Handles the form submission to create a new lecture.
          */
         async function handleFormSubmit(event) {
-            event.preventDefault(); // Stop form from reloading page
+            event.preventDefault(); 
 
             if (!currentUserProfile) {
-                alert('User profile not loaded. Please refresh.');
+                showToast('User profile not loaded. Please refresh.'); // <-- REPLACED alert
                 return;
             }
 
-            // Get all values from the form
             const newLecture = {
                 subject_name: subjectSelect.value,
                 prof_name: professorInput.value,
-                course: currentUserProfile.course, // Use the stored course
+                course: currentUserProfile.course, 
                 date: dateInput.value,
                 start_time: startTimeInput.value,
                 end_time: endTimeInput.value,
-                created_by: currentUserProfile.auth_id // Use the auth_id as requested
+                created_by: currentUserProfile.auth_id 
             };
 
-            // Basic validation
             if (!newLecture.subject_name || !newLecture.date || !newLecture.start_time || !newLecture.end_time) {
-                alert('Please fill out all fields.');
+                showToast('Please fill out all fields.'); // <-- REPLACED alert
                 return;
             }
 
-            // Disable button to prevent double-click
             submitBtn.disabled = true;
             submitBtn.textContent = 'Scheduling...';
 
             try {
-                // Insert into 'lectures' table
                 const { error } = await _supabase
-                    .from('lectures') // <-- CORRECTED TABLE NAME
+                    .from('lectures') 
                     .insert([newLecture]);
 
                 if (error) throw error;
 
-                alert('Lecture scheduled successfully!');
-                lectureForm.reset(); // Clear the form
-                professorInput.value = ''; // Reset disabled field
-                classInput.value = currentUserProfile.course.toUpperCase(); // Re-populate class
+                showToast('Lecture scheduled successfully! 🎉'); // <-- REPLACED alert
+                lectureForm.reset(); 
+                professorInput.value = ''; 
+                classInput.value = currentUserProfile.course.toUpperCase(); 
                 subjectSelect.focus();
-
 
             } catch (error) {
                 console.error('Error scheduling lecture:', error.message);
-                alert(`Error: ${error.message}`);
+                showToast(`Error: ${error.message}`); // <-- REPLACED alert
             } finally {
-                // Re-enable button
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Schedule Lecture';
             }
@@ -597,25 +636,18 @@
 
         // --- 5. EVENT LISTENERS ---
 
-        // Run the main setup function when the page loads
         document.addEventListener('DOMContentLoaded', checkUserAndLoadData);
 
-        // Listen for changes on the subject dropdown
         subjectSelect.addEventListener('change', (event) => {
-            // Find the selected option
             const selectedOption = event.target.selectedOptions[0];
-            // Get the professor name from the data attribute
             const professorName = selectedOption.dataset.professor;
-            // Set the disabled professor input's value
             professorInput.value = professorName || 'N/A';
         });
 
-        // Listen for the form submission
         lectureForm.addEventListener('submit', handleFormSubmit);
 
-        // Back button functionality
         document.querySelector('.back-btn').addEventListener('click', () => {
-            window.history.back(); // Go to the previous page
+            window.history.back(); 
         });
 
     </script>
