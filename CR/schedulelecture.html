@@ -426,7 +426,7 @@
 
     <script>
         // --- 1. SUPABASE SETUP ---
-        // TODO: Replace with your actual Supabase URL and Anon Key
+        // User's Supabase credentials
         const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
 
@@ -434,7 +434,7 @@
         const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // --- 2. GLOBAL VARIABLES ---
-        let currentUserProfile = null; // To store user's profile from 'public.users'
+        let currentUserProfile = null; // To store user's profile from 'users'
         let subjectData = [];          // To store fetched subjects
 
         // --- 3. DOM ELEMENTS ---
@@ -450,7 +450,7 @@
         // --- 4. CORE FUNCTIONS ---
 
         /**
-         * Gets the current auth user, then fetches their profile from 'public.users'
+         * Gets the current auth user, then fetches their profile from 'users'
          * and triggers the loading of subjects.
          */
         async function checkUserAndLoadData() {
@@ -465,14 +465,17 @@
                     return;
                 }
 
-                // Get user profile from 'public.users' table
+                // Get user profile from 'users' table
                 const { data: profile, error: profileError } = await _supabase
-                    .from('public_users') // Matching your table name from the image
+                    .from('users') // <-- CORRECTED TABLE NAME
                     .select('*')
                     .eq('auth_id', user.id)
                     .single();
                 
-                if (profileError) throw profileError;
+                if (profileError) {
+                    console.error('Profile Error:', profileError);
+                    throw new Error(`Could not find user profile. Make sure a row in 'users' matches the auth_id. \nError: ${profileError.message}`);
+                }
                 if (!profile) {
                     alert('Could not find user profile.');
                     return;
@@ -494,13 +497,13 @@
         }
 
         /**
-         * Fetches subjects from the 'public.subjects' table based on the user's course
+         * Fetches subjects from the 'subjects' table based on the user's course
          * and populates the subject dropdown.
          */
         async function loadSubjects(course) {
             try {
                 const { data, error } = await _supabase
-                    .from('public_subjects') // Matching your table name from the image
+                    .from('subjects') // <-- CORRECTED TABLE NAME
                     .select('subject_name, professor_name')
                     .eq('course', course);
 
@@ -531,7 +534,7 @@
 
             } catch (error) {
                 console.error('Error loading subjects:', error.message);
-                subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</option>`;
+                subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</okption>`;
             }
         }
 
@@ -568,9 +571,9 @@
             submitBtn.textContent = 'Scheduling...';
 
             try {
-                // Insert into 'public.lectures' table
+                // Insert into 'lectures' table
                 const { error } = await _supabase
-                    .from('public_lectures') // Matching your table name from the image
+                    .from('lectures') // <-- CORRECTED TABLE NAME
                     .insert([newLecture]);
 
                 if (error) throw error;
