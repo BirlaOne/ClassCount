@@ -267,7 +267,7 @@
             margin-top: 20px;
             font-weight: 500;
         }
-        .simulate-scan-btn { /* Renamed to "Open Scanner" in JS */
+        .simulate-scan-btn { 
             width: 100%;
             max-width: 250px;
             padding: 12px;
@@ -372,7 +372,7 @@
             border-radius: 25px;
             font-size: 14px;
             font-weight: 500;
-            z-index: 2000; 
+            z-index: 6000; /* <-- CHANGED: Was 2000, now higher than modal */
             transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
             white-space: nowrap;
         }
@@ -383,7 +383,7 @@
         }
         
         /* -------------------
-         * NEW: QR Scanner Modal
+         * QR Scanner Modal
          * ------------------- */
         .scanner-modal {
             display: none;
@@ -470,7 +470,7 @@
                 border-radius: 24px;
             }
             .toast, .scanner-modal {
-                position: absolute; /* Contain modal to app */
+                position: absolute; 
             }
         }
     </style>
@@ -577,7 +577,7 @@
     <script>
         // --- 1. SUPABASE SETUP ---
         const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
+        const SUPABASE_KEY = 'eyJhbGciOiJIJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
 
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -589,8 +589,8 @@
         let attendanceRecords = new Map();
         let currentLectureId = null;
         let scannedStudentCount = 0; 
-        let html5QrCode = null; // <-- NEW: For scanner instance
-        let beepSound = null; // <-- NEW: For audio
+        let html5QrCode = null; 
+        let beepSound = null; 
 
         // --- 3. DOM ELEMENTS ---
         const toast = document.getElementById('toast');
@@ -603,9 +603,8 @@
         const btnManual = document.getElementById('btn-manual');
         const btnQr = document.getElementById('btn-qr');
         const submitFooter = document.getElementById('submit-footer');
-        const openScannerBtn = document.getElementById('open-scanner-btn'); // <-- RENAMED
+        const openScannerBtn = document.getElementById('open-scanner-btn'); 
         const scannedCountLabel = document.getElementById('scanned-count'); 
-        // --- NEW: Modal Elements ---
         const scannerModal = document.getElementById('scanner-modal');
         const scannerCloseBtn = document.getElementById('scanner-close-btn');
         const qrReaderDiv = document.getElementById('qr-reader');
@@ -799,67 +798,60 @@
         }
 
         /**
-         * NEW: Marks a student as present from a scan or simulation
+         * CHANGED: Marks a student present and returns a status
          */
         function markStudentPresent(studentId) {
             const student = allStudents.find(s => s.student_id === studentId);
             
             if (!student) {
                 showToast(`Student ID ${studentId} not found in this class.`, true);
-                return false; // Indicate failure
+                return 'not_found';
             }
 
             const checkbox = document.querySelector(`.attendance-checkbox[data-student-id="${studentId}"]`);
             
             if (!checkbox) {
                 showToast(`UI Error: Could not find checkbox for ${student.name}`, true);
-                return false; // Indicate failure
+                return 'not_found';
             }
 
             if (checkbox.checked) {
                 showToast(`${student.name} already marked present.`);
+                return 'already_marked';
             } else {
                 checkbox.checked = true;
                 showToast(`Scanned: ${student.name} ✅`);
-                updateSubmitButtonCount(); // Update the main submit button
+                updateSubmitButtonCount();
+                return 'newly_marked';
             }
-            return true; // Indicate success
         }
 
         /**
-         * NEW: QR Scan Success Callback
+         * CHANGED: QR Scan Success Callback
          */
         function onScanSuccess(decodedText, decodedResult) {
             const studentId = parseInt(decodedText);
             
             if (isNaN(studentId)) {
-                // Ignore scans that aren't numbers
-                console.warn(`Scanned non-numeric QR: ${decodedText}`);
                 showToast(`Invalid QR. Please scan a valid student ID.`, true);
                 return;
             }
 
-            // Mark the student and play beep if successful
-            const success = markStudentPresent(studentId);
-            if (success) {
+            // Mark the student
+            const scanStatus = markStudentPresent(studentId);
+            
+            // Only play beep and update count if it's a *new* scan
+            if (scanStatus === 'newly_marked') {
                 beepSound.play();
-                // Update the counter on the QR tab
                 scannedStudentCount++;
                 scannedCountLabel.textContent = `Scanned: ${scannedStudentCount} students`;
             }
         }
 
-        /**
-         * NEW: QR Scan Failure Callback
-         */
         function onScanFailure(error) {
-            // This will fire constantly, so we'll just log warnings
             // console.warn(`QR scan error: ${error}`);
         }
 
-        /**
-         * NEW: Stops the camera and hides the modal
-         */
         function closeScanner() {
             try {
                 if (html5QrCode && html5QrCode.isScanning) {
@@ -869,7 +861,6 @@
                 console.error("Error stopping scanner: ", err);
             }
             scannerModal.style.display = 'none';
-            // Switch back to manual tab so user can see their changes
             switchTab('manual-entry');
         }
 
@@ -879,10 +870,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadPageData();
 
-            // --- NEW: Initialize Scanner & Beep ---
+            // Initialize Scanner & Beep
             html5QrCode = new Html5Qrcode("qr-reader");
             
-            // Create a simple beep sound
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             beepSound = {
                 play: () => {
@@ -892,11 +882,11 @@
                     gainNode.connect(audioContext.destination);
                     
                     oscillator.type = 'sine';
-                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A simple 'A' note
-                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime); // Volume
+                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime); 
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime); 
                     
                     oscillator.start();
-                    oscillator.stop(audioContext.currentTime + 0.1); // Play for 0.1 seconds
+                    oscillator.stop(audioContext.currentTime + 0.1); 
                 }
             };
         });
@@ -922,18 +912,17 @@
         // Submit button
         submitBtn.addEventListener('click', handleSubmitAttendance);
 
-        // --- NEW: Scanner Modal Listeners ---
+        // Scanner Modal Listeners
         openScannerBtn.addEventListener('click', () => {
             scannerModal.style.display = 'block';
             
-            // Start the scanner
             const config = { 
                 fps: 10, 
                 qrbox: { width: 250, height: 250 } 
             };
             
             html5QrCode.start(
-                { facingMode: "environment" }, // Use rear camera
+                { facingMode: "environment" }, 
                 config,
                 onScanSuccess,
                 onScanFailure
