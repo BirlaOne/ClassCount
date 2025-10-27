@@ -25,11 +25,12 @@
 
         html, body {
             height: 100%;
+            overflow: hidden; /* <-- CHANGED: Prevents bouncing on mobile */
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #e0e5ec; /* Background for desktop view */
+            background-color: #e0e5ec;
             color: #1a202c;
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
@@ -53,26 +54,26 @@
          * ------------------- */
         .app-container {
             width: 100%;
-            min-height: 100vh; /* Use min-height for full screen */
+            height: 100vh; /* <-- CHANGED: Use 100vh or 100dvh */
             display: flex;
             flex-direction: column;
             background-color: #f4f7fa; 
-            /* FIX: Removed position:relative and overflow:hidden 
-              to allow a pure flex-box layout.
-            */
+            overflow: hidden; /* <-- CHANGED: Prevents container from scrolling */
         }
 
         .main-content {
-            flex-grow: 1; /* <-- FIX: Makes content grow to fill space */
+            flex-grow: 1; 
             overflow-y: auto; /* Allow content to scroll */
-            padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
+            padding: 24px 20px; /* <-- CHANGED: Removed 100px bottom padding */
+            
+            /* Add some space at the end of the scroll */
+            padding-bottom: 40px; 
             
             /* --- Hide scrollbar --- */
-            scrollbar-width: none; /* For Firefox */
-            -ms-overflow-style: none; /* For IE and Edge */
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
         }
         
-        /* For Chrome, Safari, and Opera */
         .main-content::-webkit-scrollbar {
             display: none;
         }
@@ -136,7 +137,6 @@
             color: #475569;
         }
 
-        /* Style for both input and select */
         .form-group input,
         .form-group select {
             width: 100%;
@@ -151,7 +151,6 @@
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         
-        /* Specifics for select to show arrow */
         .form-group select {
             appearance: none;
             -webkit-appearance: none;
@@ -160,7 +159,7 @@
             background-repeat: no-repeat;
             background-position: right 16px center;
             background-size: 24px;
-            padding-right: 48px; /* Make space for arrow */
+            padding-right: 48px; 
         }
 
         .form-group input:focus,
@@ -174,7 +173,6 @@
             color: #94a3b8;
         }
         
-        /* Combined disabled style */
         .form-group input:disabled,
         .form-group select:disabled {
             background-color: #f1f5f9;
@@ -248,13 +246,10 @@
 
 
         /* -------------------
-         * Bottom Navigation (FIXED)
+         * Bottom Navigation
          * ------------------- */
         .bottom-nav {
-            /* FIX: Removed position:absolute and related properties.
-              This will now be positioned by the flex-container parent.
-            */
-            flex-shrink: 0; /* <-- FIX: Prevents nav from shrinking */
+            flex-shrink: 0; 
             background-color: #ffffff; 
             display: flex;
             justify-content: space-around;
@@ -282,13 +277,13 @@
         
         
         /* -------------------
-         * NEW: Toast Notification
+         * Toast Notification
          * ------------------- */
         .toast {
             visibility: hidden;
             opacity: 0;
-            position: absolute; /* Positioned relative to app-container */
-            bottom: 100px; /* Sits above the bottom nav */
+            position: absolute; 
+            bottom: 100px; 
             left: 50%;
             transform: translateX(-50%);
             background-color: #333;
@@ -305,16 +300,19 @@
         .toast.show {
             visibility: visible;
             opacity: 1;
-            bottom: 110px; /* Animate upwards slightly */
+            bottom: 110px; 
         }
 
         
         /* -------------------
-         * Mobile-Friendly Media Query
+         * Desktop Media Query
          * ------------------- */
          
         @media (min-width: 500px) {
             body {
+                /* Re-enable scrolling for desktop view if needed, 
+                   but center the app */
+                overflow: auto; /* <-- CHANGED */
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -322,13 +320,13 @@
             }
             
             .app-container {
+                /* This was already correct, using fixed height */
                 max-width: 450px;
                 height: 95vh;
                 max-height: 850px;
                 border-radius: 24px;
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
                 border: 1px solid #f8f9fa;
-                /* This is new/important for positioning toast */
                 position: relative; 
                 overflow: hidden; 
             }
@@ -460,7 +458,7 @@
         // --- 2. GLOBAL VARIABLES ---
         let currentUserProfile = null; 
         let subjectData = [];          
-        let toastTimer; // <-- NEW: For managing toast timeout
+        let toastTimer; 
 
         // --- 3. DOM ELEMENTS ---
         const subjectSelect = document.getElementById('subject');
@@ -471,49 +469,34 @@
         const endTimeInput = document.getElementById('end-time');
         const lectureForm = document.getElementById('lecture-form');
         const submitBtn = document.getElementById('submit-btn');
-        // --- NEW: Toast Elements ---
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toast-message');
 
 
         // --- 4. CORE FUNCTIONS ---
 
-        /**
-         * NEW: Shows a toast notification
-         */
         function showToast(message) {
-            // Clear any existing timer
             if (toastTimer) {
                 clearTimeout(toastTimer);
             }
-
-            // Set message and show toast
             toastMessage.textContent = message;
             toast.classList.add('show');
-
-            // Set new timer to hide toast
             toastTimer = setTimeout(() => {
                 toast.classList.remove('show');
                 toastTimer = null;
-            }, 3000); // 3 seconds
+            }, 3000); 
         }
 
-        /**
-         * Gets the current auth user, then fetches their profile from 'users'
-         * and triggers the loading of subjects.
-         */
         async function checkUserAndLoadData() {
             try {
-                // Get user from Supabase Auth
                 const { data: { user }, error: authError } = await _supabase.auth.getUser();
 
                 if (authError) throw authError;
                 if (!user) {
-                    showToast('You are not logged in.'); // <-- REPLACED alert
+                    showToast('You are not logged in.'); 
                     return;
                 }
 
-                // Get user profile from 'users' table
                 const { data: profile, error: profileError } = await _supabase
                     .from('users') 
                     .select('*')
@@ -525,29 +508,22 @@
                     throw new Error(`Could not find user profile.`);
                 }
                 if (!profile) {
-                    showToast('Could not find user profile.'); // <-- REPLACED alert
+                    showToast('Could not find user profile.'); 
                     return;
                 }
 
                 currentUserProfile = profile; 
 
-                // 1. Populate the disabled 'Class' field
                 classInput.value = currentUserProfile.course.toUpperCase();
-
-                // 2. Load subjects for that user's course
                 await loadSubjects(currentUserProfile.course);
 
             } catch (error) {
                 console.error('Error loading user data:', error.message);
-                showToast(`Error: ${error.message}`); // <-- REPLACED alert
+                showToast(`Error: ${error.message}`); 
                 subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</option>`;
             }
         }
 
-        /**
-         * Fetches subjects from the 'subjects' table based on the user's course
-         * and populates the subject dropdown.
-         */
         async function loadSubjects(course) {
             try {
                 const { data, error } = await _supabase
@@ -558,7 +534,6 @@
                 if (error) throw error;
 
                 subjectData = data; 
-
                 subjectSelect.innerHTML = ''; 
                 
                 const defaultOption = document.createElement('option');
@@ -578,19 +553,16 @@
 
             } catch (error) {
                 console.error('Error loading subjects:', error.message);
-                showToast('Error loading subjects'); // <-- REPLACED alert (implicit)
+                showToast('Error loading subjects'); 
                 subjectSelect.innerHTML = `<option value="" disabled selected>Error loading subjects</option>`;
             }
         }
 
-        /**
-         * Handles the form submission to create a new lecture.
-         */
         async function handleFormSubmit(event) {
             event.preventDefault(); 
 
             if (!currentUserProfile) {
-                showToast('User profile not loaded. Please refresh.'); // <-- REPLACED alert
+                showToast('User profile not loaded. Please refresh.'); 
                 return;
             }
 
@@ -605,7 +577,7 @@
             };
 
             if (!newLecture.subject_name || !newLecture.date || !newLecture.start_time || !newLecture.end_time) {
-                showToast('Please fill out all fields.'); // <-- REPLACED alert
+                showToast('Please fill out all fields.'); 
                 return;
             }
 
@@ -619,7 +591,7 @@
 
                 if (error) throw error;
 
-                showToast('Lecture scheduled successfully! 🎉'); // <-- REPLACED alert
+                showToast('Lecture scheduled successfully! 🎉'); 
                 lectureForm.reset(); 
                 professorInput.value = ''; 
                 classInput.value = currentUserProfile.course.toUpperCase(); 
@@ -627,7 +599,7 @@
 
             } catch (error) {
                 console.error('Error scheduling lecture:', error.message);
-                showToast(`Error: ${error.message}`); // <-- REPLACED alert
+                showToast(`Error: ${error.message}`); 
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Schedule Lecture';
