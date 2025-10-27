@@ -7,7 +7,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family:Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
@@ -25,7 +25,7 @@
 
         html, body {
             height: 100%;
-            overflow: hidden; /* Prevents bouncing on mobile */
+            /* Removed overflow:hidden to allow schedulelecture.html layout */
         }
 
         body {
@@ -50,22 +50,21 @@
         }
 
         /* -------------------
-         * App Layout (FIXED)
+         * App Layout (Matched to schedulelecture.html)
          * ------------------- */
         .app-container {
             width: 100%;
-            height: 100vh; /* Use 100vh or 100dvh */
+            min-height: 100vh; /* <-- CHANGED */
             display: flex;
             flex-direction: column;
-            background-color: #f4f7fa; /* Page background from schedule page */
-            overflow: hidden; /* Prevents container from scrolling */
+            background-color: #f4f7fa; 
+            /* Removed overflow:hidden and height:100vh */
         }
 
         .main-content {
             flex-grow: 1; 
-            overflow-y: auto; /* Allow content to scroll */
-            padding: 24px 20px; /* Removed 100px bottom padding */
-            padding-bottom: 40px; /* Add some space at the end of the scroll */
+            overflow-y: auto; 
+            padding: 24px 20px 100px 20px; /* <-- CHANGED: Added 100px bottom padding */
             scrollbar-width: none; 
             -ms-overflow-style: none; 
         }
@@ -109,7 +108,7 @@
             margin-bottom: 12px;
             box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
             border: 1px solid #f1f1f1;
-            cursor: pointer; /* Make card clickable */
+            cursor: pointer; 
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .card:active {
@@ -189,10 +188,13 @@
         }
 
         /* -------------------
-         * Bottom Navigation
+         * Bottom Navigation (Matched to schedulelecture.html)
          * ------------------- */
         .bottom-nav {
-            flex-shrink: 0; /* Prevents nav from shrinking */
+            position: fixed; /* <-- CHANGED */
+            bottom: 0;
+            left: 0;
+            right: 0;
             background-color: #ffffff; 
             display: flex;
             justify-content: space-around;
@@ -201,13 +203,14 @@
             border-top: 1px solid #e2e8f0;
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
+            z-index: 1000; /* <-- CHANGED */
         }
         .nav-item {
             display: flex;
             flex-direction: column;
             align-items: center;
             text-decoration: none;
-            color: #718096; /* Inactive color */
+            color: #718096; 
             font-size: 12px;
             font-weight: 500;
         }
@@ -216,19 +219,19 @@
             margin-bottom: 2px;
         }
         .nav-item.active {
-            color: #4f46e5; /* Active color */
+            color: #4f46e5; 
         }
         .nav-item.active .material-symbols-outlined {
             font-variation-settings: 'FILL' 1;
         }
         
         /* -------------------
-         * Toast Notification
+         * Toast Notification (Matched to schedulelecture.html)
          * ------------------- */
         .toast {
             visibility: hidden;
             opacity: 0;
-            position: absolute; 
+            position: fixed; /* <-- CHANGED */
             bottom: 100px; 
             left: 50%;
             transform: translateX(-50%);
@@ -238,7 +241,7 @@
             border-radius: 25px;
             font-size: 14px;
             font-weight: 500;
-            z-index: 10;
+            z-index: 2000; /* <-- CHANGED */
             transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
             white-space: nowrap;
         }
@@ -249,11 +252,10 @@
         }
         
         /* -------------------
-         * Desktop Media Query
+         * Desktop Media Query (Matched to schedulelecture.html)
          * ------------------- */
         @media (min-width: 500px) {
             body {
-                overflow: auto;
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -266,10 +268,12 @@
                 border-radius: 24px;
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
                 border: 1px solid #f8f9fa;
-                position: relative; 
-                overflow: hidden; 
+                position: relative; /* <-- This is key */
+                overflow: hidden; /* This clips the fixed nav */
             }
             .bottom-nav {
+                /* It's still fixed, but this rounds the corners */
+                /* to match the parent container */
                 border-bottom-left-radius: 24px;
                 border-bottom-right-radius: 24px;
             }
@@ -334,9 +338,6 @@
 
         // --- 4. CORE FUNCTIONS ---
 
-        /**
-         * Shows a toast notification
-         */
         function showToast(message) {
             if (toastTimer) clearTimeout(toastTimer);
             toastMessage.textContent = message;
@@ -347,9 +348,6 @@
             }, 3000); 
         }
 
-        /**
-         * Helper to format time from 'HH:mm:ss' to 'HH:mm AM/PM'
-         */
         function formatTime(timeString) {
             if (!timeString) return 'N/A';
             const [hours, minutes] = timeString.split(':');
@@ -359,22 +357,15 @@
             return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         }
         
-        /**
-         * Helper to format date from 'YYYY-MM-DD' to 'DD/MM/YYYY'
-         */
          function formatDate(dateString) {
              if (!dateString) return 'N/A';
              const [year, month, day] = dateString.split('-');
              return `${day}/${month}/${year}`;
          }
 
-        /**
-         * Checks lecture date/time and returns status
-         */
         function getLectureStatus(date, startTime, endTime) {
             const now = new Date();
             
-            // Create Date objects for start and end times
             const [startHour, startMin] = startTime.split(':');
             const lectureStartTime = new Date(date);
             lectureStartTime.setHours(startHour, startMin, 0, 0);
@@ -392,19 +383,14 @@
             }
         }
 
-        /**
-         * Fetches and displays all lectures for the user's course
-         */
         async function loadLectures() {
             try {
-                // 1. Get current user
                 const { data: { user }, error: authError } = await _supabase.auth.getUser();
                 if (authError || !user) {
                     showToast('You are not logged in.');
                     throw new Error('User not logged in');
                 }
 
-                // 2. Get user's profile to find their course
                 const { data: profile, error: profileError } = await _supabase
                     .from('users')
                     .select('course')
@@ -418,18 +404,16 @@
 
                 const userCourse = profile.course;
 
-                // 3. Fetch all lectures for that course
                 const { data: lectures, error: lectureError } = await _supabase
                     .from('lectures')
-                    .select('*') // Get all columns, including lecture_id
+                    .select('*') 
                     .eq('course', userCourse)
-                    .order('date', { ascending: false }); // Show newest first
+                    .order('date', { ascending: false }); 
 
                 if (lectureError) {
                     throw lectureError;
                 }
 
-                // 4. Check if lectures exist
                 if (lectures.length === 0) {
                     const noLecturesHtml = `
                         <div class="empty-state">
@@ -441,13 +425,11 @@
                     return;
                 }
 
-                // 5. Build and insert HTML for each lecture
                 lectures.forEach(lecture => {
                     const status = getLectureStatus(lecture.date, lecture.start_time, lecture.end_time);
                     
                     const lectureCard = document.createElement('div');
                     lectureCard.className = 'card lecture-card';
-                    // Store lecture_id on the element itself
                     lectureCard.dataset.lectureId = lecture.lecture_id; 
                     
                     lectureCard.innerHTML = `
@@ -470,9 +452,7 @@
                         </div>
                     `;
                     
-                    // Add click event listener to the card
                     lectureCard.addEventListener('click', () => {
-                        // Navigate to record attendance page with lecture_id
                         window.location.href = `recordattendence.html?lecture_id=${lecture.lecture_id}`;
                     });
 
@@ -492,13 +472,10 @@
             }
         }
 
-
         // --- 5. EVENT LISTENERS ---
 
-        // Load lectures when the page is ready
         document.addEventListener('DOMContentLoaded', loadLectures);
 
-        // Back button
         document.querySelector('.back-btn').addEventListener('click', () => {
             window.history.back(); 
         });
