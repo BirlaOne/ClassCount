@@ -11,6 +11,8 @@
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         /* -------------------
          * Global Reset & Setup
@@ -23,11 +25,12 @@
 
         html, body {
             height: 100%;
+            overflow: hidden; /* Prevents bouncing on mobile */
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #e0e5ec; /* Background for desktop view */
+            background-color: #e0e5ec; /* Desktop background */
             color: #1a202c;
             line-height: 1.5;
             -webkit-font-smoothing: antialiased;
@@ -47,56 +50,57 @@
         }
 
         /* -------------------
-         * App Layout
+         * App Layout (FIXED)
          * ------------------- */
         .app-container {
             width: 100%;
-            min-height: 100vh; /* Use min-height for full screen */
+            height: 100vh; /* Use 100vh or 100dvh */
             display: flex;
             flex-direction: column;
-            background-color: #FFFFFF; /* White app background */
-            position: relative;
-            overflow: hidden; /* Hide overflow */
+            background-color: #f4f7fa; /* Page background from schedule page */
+            overflow: hidden; /* Prevents container from scrolling */
         }
 
         .main-content {
-            flex-grow: 1;
-            /* No scrolling needed for this page */
-            padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
+            flex-grow: 1; 
+            overflow-y: auto; /* Allow content to scroll */
+            padding: 24px 20px; /* Removed 100px bottom padding */
+            padding-bottom: 40px; /* Add some space at the end of the scroll */
+            scrollbar-width: none; 
+            -ms-overflow-style: none; 
+        }
+        .main-content::-webkit-scrollbar {
+            display: none;
         }
         
         /* -------------------
-         * NEW Header (Record Page)
+         * Header
          * ------------------- */
         header {
             margin-bottom: 24px;
             display: flex;
             align-items: center;
             gap: 12px;
+            color: #1a202c; 
         }
-        
         header .back-btn {
             font-size: 28px;
-            color: #1a202c;
             font-variation-settings: 'wght' 500;
+            cursor: pointer;
         }
-
         header .header-text h1 {
             font-size: 24px;
             font-weight: 700;
-            color: #1a202c;
             line-height: 1.2;
         }
-
         header .header-text p {
             font-size: 16px;
             color: #718096;
             font-weight: 500;
         }
-        
 
         /* -------------------
-         * Card Styling (Re-used)
+         * Lecture Card Styling
          * ------------------- */
         .card {
             background-color: #ffffff;
@@ -104,8 +108,15 @@
             padding: 16px;
             margin-bottom: 12px;
             box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
-            border: 1px solid #f1f1f1; /* Light border for card */
+            border: 1px solid #f1f1f1;
+            cursor: pointer; /* Make card clickable */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+        .card:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 12px rgba(149, 157, 165, 0.1);
+        }
+        
         .card-header {
             display: flex;
             justify-content: space-between;
@@ -130,10 +141,21 @@
             flex-shrink: 0;
             margin-left: 8px;
         }
-        .badge.cs {
-            background-color: #dbeafe;
+        
+        /* NEW Status Badges */
+        .badge.upcoming {
+            background-color: #dbeafe; /* Blue */
             color: #2563eb;
         }
+        .badge.ongoing {
+            background-color: #dcfce7; /* Green */
+            color: #16a34a;
+        }
+        .badge.completed {
+            background-color: #f1f5f9; /* Grey */
+            color: #64748b;
+        }
+        
         .card-footer {
             display: flex;
             gap: 20px;
@@ -151,26 +173,35 @@
             color: #718096;
         }
 
+        /* Message for no lectures */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #718096;
+        }
+        .empty-state .material-symbols-outlined {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        .empty-state p {
+            font-size: 16px;
+            font-weight: 500;
+        }
 
         /* -------------------
          * Bottom Navigation
          * ------------------- */
         .bottom-nav {
-            position: absolute; 
-            bottom: 0;
-            left: 0;
-            right: 0;
+            flex-shrink: 0; /* Prevents nav from shrinking */
             background-color: #ffffff; 
             display: flex;
             justify-content: space-around;
             padding: 12px 0 10px 0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
             border-top: 1px solid #e2e8f0;
-            
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
         }
-
         .nav-item {
             display: flex;
             flex-direction: column;
@@ -187,53 +218,69 @@
         .nav-item.active {
             color: #4f46e5; /* Active color */
         }
-        
-        /* Set active icon to 'filled' */
         .nav-item.active .material-symbols-outlined {
             font-variation-settings: 'FILL' 1;
         }
         
+        /* -------------------
+         * Toast Notification
+         * ------------------- */
+        .toast {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute; 
+            bottom: 100px; 
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10;
+            transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
+            white-space: nowrap;
+        }
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+            bottom: 110px; 
+        }
         
         /* -------------------
-         * Mobile-Friendly Media Query
+         * Desktop Media Query
          * ------------------- */
-         
-        /* On screens 500px or wider (desktops), simulate a phone */
         @media (min-width: 500px) {
             body {
-                /* Center the app on desktop */
+                overflow: auto;
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 padding: 16px 0;
             }
-            
             .app-container {
-                /* Constrain the width and height */
                 max-width: 450px;
                 height: 95vh;
                 max-height: 850px;
-                
-                /* Add rounded corners and shadow */
                 border-radius: 24px;
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
                 border: 1px solid #f8f9fa;
+                position: relative; 
+                overflow: hidden; 
             }
-            
             .bottom-nav {
-                /* Add rounded corners to match the app container */
                 border-bottom-left-radius: 24px;
                 border-bottom-right-radius: 24px;
             }
         }
-
     </style>
 </head>
 <body>
 
     <div class="app-container">
         
-        <main class="main-content">
+        <main class="main-content" id="lecture-list">
 
             <header>
                 <span class="material-symbols-outlined back-btn">arrow_back</span>
@@ -243,48 +290,220 @@
                 </div>
             </header>
 
-            <div class="card lecture-card">
-                <div class="card-header">
-                    <div>
-                        <h3>Database Management</h3>
-                        <p class="subtitle">Prof. Sanjay Verma</p>
-                    </div>
-                    <span class="badge cs">CS 2025</span>
-                </div>
-                <div class="card-footer">
-                    <div class="info-item">
-                        <span class="material-symbols-outlined">calendar_month</span>
-                        25/10/2025
-                    </div>
-                    <div class="info-item">
-                        <span class="material-symbols-outlined">schedule</span>
-                        11:00 AM - 12:00 PM
-                    </div>
-                </div>
-            </div>
-
-        </main>
+            </main>
 
         <nav class="bottom-nav">
-            <a href="#" class="nav-item">
+            <a href="index.html" class="nav-item">
                 <span class="material-symbols-outlined">home</span>
                 Home
             </a>
-            <a href="#" class="nav-item active">
-                <span class="material-symbols-outlined">playlist_add_check</span>
+            <a href="record.html" class="nav-item active"> <span class="material-symbols-outlined">playlist_add_check</span>
                 Record
             </a>
-            <a href="#" class="nav-item">
+            <a href="students.html" class="nav-item">
                 <span class="material-symbols-outlined">groups</span>
                 Students
             </a>
-            <a href="#" class="nav-item">
+            <a href="analytics.html" class="nav-item">
                 <span class="material-symbols-outlined">bar_chart</span>
                 Analytics
             </a>
         </nav>
 
+        <div id="toast" class="toast">
+            <span id="toast-message">This is a toast message!</span>
+        </div>
+
     </div>
+
+    <script>
+        // --- 1. SUPABASE SETUP ---
+        const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- 2. GLOBAL VARIABLES ---
+        let toastTimer;
+
+        // --- 3. DOM ELEMENTS ---
+        const lectureListContainer = document.getElementById('lecture-list');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toast-message');
+
+        // --- 4. CORE FUNCTIONS ---
+
+        /**
+         * Shows a toast notification
+         */
+        function showToast(message) {
+            if (toastTimer) clearTimeout(toastTimer);
+            toastMessage.textContent = message;
+            toast.classList.add('show');
+            toastTimer = setTimeout(() => {
+                toast.classList.remove('show');
+                toastTimer = null;
+            }, 3000); 
+        }
+
+        /**
+         * Helper to format time from 'HH:mm:ss' to 'HH:mm AM/PM'
+         */
+        function formatTime(timeString) {
+            if (!timeString) return 'N/A';
+            const [hours, minutes] = timeString.split(':');
+            const d = new Date();
+            d.setHours(parseInt(hours));
+            d.setMinutes(parseInt(minutes));
+            return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        /**
+         * Helper to format date from 'YYYY-MM-DD' to 'DD/MM/YYYY'
+         */
+         function formatDate(dateString) {
+             if (!dateString) return 'N/A';
+             const [year, month, day] = dateString.split('-');
+             return `${day}/${month}/${year}`;
+         }
+
+        /**
+         * Checks lecture date/time and returns status
+         */
+        function getLectureStatus(date, startTime, endTime) {
+            const now = new Date();
+            
+            // Create Date objects for start and end times
+            const [startHour, startMin] = startTime.split(':');
+            const lectureStartTime = new Date(date);
+            lectureStartTime.setHours(startHour, startMin, 0, 0);
+
+            const [endHour, endMin] = endTime.split(':');
+            const lectureEndTime = new Date(date);
+            lectureEndTime.setHours(endHour, endMin, 0, 0);
+
+            if (now > lectureEndTime) {
+                return { text: 'Completed', class: 'completed' };
+            } else if (now >= lectureStartTime && now <= lectureEndTime) {
+                return { text: 'Ongoing', class: 'ongoing' };
+            } else {
+                return { text: 'Upcoming', class: 'upcoming' };
+            }
+        }
+
+        /**
+         * Fetches and displays all lectures for the user's course
+         */
+        async function loadLectures() {
+            try {
+                // 1. Get current user
+                const { data: { user }, error: authError } = await _supabase.auth.getUser();
+                if (authError || !user) {
+                    showToast('You are not logged in.');
+                    throw new Error('User not logged in');
+                }
+
+                // 2. Get user's profile to find their course
+                const { data: profile, error: profileError } = await _supabase
+                    .from('users')
+                    .select('course')
+                    .eq('auth_id', user.id)
+                    .single();
+
+                if (profileError || !profile) {
+                    showToast('Could not find user profile.');
+                    throw new Error('Profile not found');
+                }
+
+                const userCourse = profile.course;
+
+                // 3. Fetch all lectures for that course
+                const { data: lectures, error: lectureError } = await _supabase
+                    .from('lectures')
+                    .select('*') // Get all columns, including lecture_id
+                    .eq('course', userCourse)
+                    .order('date', { ascending: false }); // Show newest first
+
+                if (lectureError) {
+                    throw lectureError;
+                }
+
+                // 4. Check if lectures exist
+                if (lectures.length === 0) {
+                    const noLecturesHtml = `
+                        <div class="empty-state">
+                            <span class="material-symbols-outlined">event_busy</span>
+                            <p>No lectures found for your course.</p>
+                        </div>
+                    `;
+                    lectureListContainer.insertAdjacentHTML('beforeend', noLecturesHtml);
+                    return;
+                }
+
+                // 5. Build and insert HTML for each lecture
+                lectures.forEach(lecture => {
+                    const status = getLectureStatus(lecture.date, lecture.start_time, lecture.end_time);
+                    
+                    const lectureCard = document.createElement('div');
+                    lectureCard.className = 'card lecture-card';
+                    // Store lecture_id on the element itself
+                    lectureCard.dataset.lectureId = lecture.lecture_id; 
+                    
+                    lectureCard.innerHTML = `
+                        <div class="card-header">
+                            <div>
+                                <h3>${lecture.subject_name}</h3>
+                                <p class="subtitle">${lecture.prof_name}</p>
+                            </div>
+                            <span class="badge ${status.class}">${status.text}</span>
+                        </div>
+                        <div class="card-footer">
+                            <div class="info-item">
+                                <span class="material-symbols-outlined">calendar_month</span>
+                                ${formatDate(lecture.date)}
+                            </div>
+                            <div class="info-item">
+                                <span class="material-symbols-outlined">schedule</span>
+                                ${formatTime(lecture.start_time)} - ${formatTime(lecture.end_time)}
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add click event listener to the card
+                    lectureCard.addEventListener('click', () => {
+                        // Navigate to record attendance page with lecture_id
+                        window.location.href = `recordattendence.html?lecture_id=${lecture.lecture_id}`;
+                    });
+
+                    lectureListContainer.appendChild(lectureCard);
+                });
+
+            } catch (error) {
+                console.error('Error loading lectures:', error.message);
+                showToast(`Error: ${error.message}`);
+                const errorHtml = `
+                    <div class="empty-state">
+                        <span class="material-symbols-outlined">error</span>
+                        <p>Could not load lectures.</p>
+                    </div>
+                `;
+                lectureListContainer.insertAdjacentHTML('beforeend', errorHtml);
+            }
+        }
+
+
+        // --- 5. EVENT LISTENERS ---
+
+        // Load lectures when the page is ready
+        document.addEventListener('DOMContentLoaded', loadLectures);
+
+        // Back button
+        document.querySelector('.back-btn').addEventListener('click', () => {
+            window.history.back(); 
+        });
+
+    </script>
 
 </body>
 </html>
