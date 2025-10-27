@@ -15,269 +15,269 @@
 
     <style>
         /* -------------------
-         * Global Reset & Setup
-         * ------------------- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+ * Global Reset & Setup
+ * ------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        html, body {
-            height: 100%;
-            /* Removed overflow:hidden to allow schedulelecture.html layout */
-        }
+html, body {
+    height: 100%;
+}
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #e0e5ec; /* Desktop background */
-            color: #1a202c;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-        }
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #e0e5ec;
+    color: #1a202c;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+}
 
-        /* -------------------
-         * Icon Styling
-         * ------------------- */
-        .material-symbols-outlined {
-            font-variation-settings:
-                'FILL' 0,
-                'wght' 400,
-                'GRAD' 0,
-                'opsz' 24;
-            vertical-align: middle;
-            font-size: 20px;
-        }
+/* -------------------
+ * Icon Styling
+ * ------------------- */
+.material-symbols-outlined {
+    font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 24;
+    vertical-align: middle;
+    font-size: 20px;
+}
 
-        /* -------------------
-         * App Layout (Matched to schedulelecture.html)
-         * ------------------- */
-        .app-container {
-            width: 100%;
-            min-height: 100vh; /* <-- CHANGED */
-            display: flex;
-            flex-direction: column;
-            background-color: #f4f7fa; 
-            /* Removed overflow:hidden and height:100vh */
-        }
+/* -------------------
+ * App Layout
+ * ------------------- */
+.app-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f4f7fa;
+}
 
-        .main-content {
-            flex-grow: 1; 
-            overflow-y: auto; 
-            padding: 24px 20px 100px 20px; /* <-- CHANGED: Added 100px bottom padding */
-            scrollbar-width: none; 
-            -ms-overflow-style: none; 
-        }
-        .main-content::-webkit-scrollbar {
-            display: none;
-        }
-        
-        /* -------------------
-         * Header
-         * ------------------- */
-        header {
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            color: #1a202c; 
-        }
-        header .back-btn {
-            font-size: 28px;
-            font-variation-settings: 'wght' 500;
-            cursor: pointer;
-        }
-        header .header-text h1 {
-            font-size: 24px;
-            font-weight: 700;
-            line-height: 1.2;
-        }
-        header .header-text p {
-            font-size: 16px;
-            color: #718096;
-            font-weight: 500;
-        }
+/* Main content scrollable */
+.main-content {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 24px 20px 100px 20px; /* space for bottom nav */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+.main-content::-webkit-scrollbar {
+    display: none;
+}
 
-        /* -------------------
-         * Lecture Card Styling
-         * ------------------- */
-        .card {
-            background-color: #ffffff;
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
-            border: 1px solid #f1f1f1;
-            cursor: pointer; 
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .card:active {
-            transform: scale(0.98);
-            box-shadow: 0 4px 12px rgba(149, 157, 165, 0.1);
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 16px;
-        }
-        .card h3 {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 2px;
-            color: #1a202c;
-        }
-        .card .subtitle {
-            font-size: 14px;
-            color: #718096;
-        }
-        .badge {
-            font-size: 12px;
-            font-weight: 500;
-            padding: 4px 10px;
-            border-radius: 12px;
-            flex-shrink: 0;
-            margin-left: 8px;
-        }
-        
-        /* NEW Status Badges */
-        .badge.upcoming {
-            background-color: #dbeafe; /* Blue */
-            color: #2563eb;
-        }
-        .badge.ongoing {
-            background-color: #dcfce7; /* Green */
-            color: #16a34a;
-        }
-        .badge.completed {
-            background-color: #f1f5f9; /* Grey */
-            color: #64748b;
-        }
-        
-        .card-footer {
-            display: flex;
-            gap: 20px;
-            font-size: 14px;
-            color: #4a5568;
-            font-weight: 500;
-        }
-        .info-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .info-item .material-symbols-outlined {
-            font-size: 18px;
-            color: #718096;
-        }
+/* -------------------
+ * Header
+ * ------------------- */
+header {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #1a202c;
+}
+header .back-btn {
+    font-size: 28px;
+    font-variation-settings: 'wght' 500;
+    cursor: pointer;
+}
+header .header-text h1 {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 1.2;
+}
+header .header-text p {
+    font-size: 16px;
+    color: #718096;
+    font-weight: 500;
+}
 
-        /* Message for no lectures */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #718096;
-        }
-        .empty-state .material-symbols-outlined {
-            font-size: 48px;
-            margin-bottom: 12px;
-        }
-        .empty-state p {
-            font-size: 16px;
-            font-weight: 500;
-        }
+/* -------------------
+ * Lecture Card Styling
+ * ------------------- */
+.card {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+    border: 1px solid #f1f1f1;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:active {
+    transform: scale(0.98);
+    box-shadow: 0 4px 12px rgba(149, 157, 165, 0.1);
+}
 
-        /* -------------------
-         * Bottom Navigation (Matched to schedulelecture.html)
-         * ------------------- */
-        .bottom-nav {
-            position: fixed; /* <-- CHANGED */
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: #ffffff; 
-            display: flex;
-            justify-content: space-around;
-            padding: 12px 0 10px 0;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
-            border-top: 1px solid #e2e8f0;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            z-index: 1000; /* <-- CHANGED */
-        }
-        .nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-decoration: none;
-            color: #718096; 
-            font-size: 12px;
-            font-weight: 500;
-        }
-        .nav-item .material-symbols-outlined {
-            font-size: 26px;
-            margin-bottom: 2px;
-        }
-        .nav-item.active {
-            color: #4f46e5; 
-        }
-        .nav-item.active .material-symbols-outlined {
-            font-variation-settings: 'FILL' 1;
-        }
-        
-        /* -------------------
-         * Toast Notification (Matched to schedulelecture.html)
-         * ------------------- */
-        .toast {
-            visibility: hidden;
-            opacity: 0;
-            position: fixed; /* <-- CHANGED */
-            bottom: 100px; 
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: #333;
-            color: #fff;
-            padding: 12px 20px;
-            border-radius: 25px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 2000; /* <-- CHANGED */
-            transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
-            white-space: nowrap;
-        }
-        .toast.show {
-            visibility: visible;
-            opacity: 1;
-            bottom: 110px; 
-        }
-        
-        /* -------------------
-         * Desktop Media Query (Matched to schedulelecture.html)
-         * ------------------- */
-        @media (min-width: 500px) {
-            body {
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                padding: 16px 0;
-            }
-            .app-container {
-                max-width: 450px;
-                height: 95vh;
-                max-height: 850px;
-                border-radius: 24px;
-                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-                border: 1px solid #f8f9fa;
-                position: relative; /* <-- This is key */
-                overflow: hidden; /* This clips the fixed nav */
-            }
-            .bottom-nav {
-                /* It's still fixed, but this rounds the corners */
-                /* to match the parent container */
-                border-bottom-left-radius: 24px;
-                border-bottom-right-radius: 24px;
-            }
-        }
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+.card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 2px;
+    color: #1a202c;
+}
+.card .subtitle {
+    font-size: 14px;
+    color: #718096;
+}
+
+/* Status Badges */
+.badge {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+.badge.upcoming {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+.badge.ongoing {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+.badge.completed {
+    background-color: #f1f5f9;
+    color: #64748b;
+}
+
+.card-footer {
+    display: flex;
+    gap: 20px;
+    font-size: 14px;
+    color: #4a5568;
+    font-weight: 500;
+}
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.info-item .material-symbols-outlined {
+    font-size: 18px;
+    color: #718096;
+}
+
+/* -------------------
+ * Empty State
+ * ------------------- */
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #718096;
+}
+.empty-state .material-symbols-outlined {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+.empty-state p {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* -------------------
+ * Bottom Navigation (Fixed)
+ * ------------------- */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    padding: 12px 0 10px 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+    border-top: 1px solid #e2e8f0;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    z-index: 1000;
+}
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-decoration: none;
+    color: #718096;
+    font-size: 12px;
+    font-weight: 500;
+}
+.nav-item .material-symbols-outlined {
+    font-size: 26px;
+    margin-bottom: 2px;
+}
+.nav-item.active {
+    color: #4f46e5;
+}
+.nav-item.active .material-symbols-outlined {
+    font-variation-settings: 'FILL' 1;
+}
+
+/* -------------------
+ * Toast Notification
+ * ------------------- */
+.toast {
+    visibility: hidden;
+    opacity: 0;
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 2000;
+    transition: opacity 0.3s, visibility 0.3s, bottom 0.3s;
+    white-space: nowrap;
+}
+.toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 110px;
+}
+
+/* -------------------
+ * Desktop Layout
+ * ------------------- */
+@media (min-width: 500px) {
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 16px 0;
+    }
+    .app-container {
+        max-width: 450px;
+        height: 95vh;
+        max-height: 850px;
+        border-radius: 24px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        border: 1px solid #f8f9fa;
+        position: relative;
+        overflow: hidden;
+    }
+    .bottom-nav {
+        border-bottom-left-radius: 24px;
+        border-bottom-right-radius: 24px;
+    }
+}
+
     </style>
 </head>
 <body>
