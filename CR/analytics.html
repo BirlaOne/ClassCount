@@ -623,27 +623,64 @@
                 userCourse = profile.course;
                 headerSubtitle.textContent = `${userCourse.toUpperCase()} - Performance Insights`;
 
-                // 2. Fetch all necessary data in parallel
-                const studentsPromise = _supabase.from('students').select('student_id, name, year').eq('course', userCourse);
-                const scoresPromise = _supabase.from('scores').select('student_id, total_score').eq('course', userCourse); // Assuming scores has course
-                const summaryPromise = _supabase.from('student_attendance_summary').select('student_id, lecture_percentage').eq('course', userCourse);
-                const lecturesPromise = _supabase.from('lectures').select('lecture_id', { count: 'exact', head: true }).eq('course', userCourse); // Count only
+                // 2. Fetch students first to get IDs
+                const { data: students, error: sErr } = await _supabase
+                    .from('students')
+                    .select('student_id, name, year') // Fetch needed info
+                    .eq('course', userCourse);
 
-                const [
-                    { data: students, error: sErr },
-                    { data: scores, error: scErr },
-                    { data: summaries, error: suErr },
-                    { count: lecturesCountResult, error: lErr } // Get count directly
-                ] = await Promise.all([studentsPromise, scoresPromise, summaryPromise, lecturesPromise]);
-
-                if (sErr || scErr || suErr || lErr) {
-                    console.error('Fetch error:', sErr || scErr || suErr || lErr);
-                    throw new Error('Failed to fetch some data.');
+                if (sErr) {
+                    console.error('Fetch error (students):', sErr);
+                    throw new Error('Failed to fetch student list.');
                 }
                 
-                totalLecturesCount = lecturesCountResult; // Store for PDF
+                const studentIds = students.map(s => s.student_id);
 
-                // 3. Merge Data (Create a combined data structure)
+                // Check if there are any students before proceeding
+                if (studentIds.length === 0) {
+                     statTotalStudents.textContent = 0;
+                     statAvgAttendance.textContent = '0%';
+                     statAvgScore.textContent = '0/100';
+                     statBlacklisted.textContent = 0;
+                     renderPerformanceChart({ excellent: 0, good: 0, needs: 0 }); // Render empty chart
+                     topPerformersList.innerHTML = '<li class="empty-list-message">No students found in this course.</li>';
+                     blacklistedList.innerHTML = '<p class="empty-list-message">No students found in this course.</p>';
+                     downloadPdfBtn.disabled = true; // Disable download if no data
+                     return; // Stop execution
+                }
+
+                // 3. Fetch other data using student IDs
+                // --- THIS IS THE CORRECTED PART ---
+                const scoresPromise = _supabase
+                    .from('scores')
+                    .select('student_id, total_score')
+                    .in('student_id', studentIds); // Use .in() instead of .eq('course', ...)
+                // --- END CORRECTION ---
+
+                const summaryPromise = _supabase
+                    .from('student_attendance_summary')
+                    .select('student_id, lecture_percentage')
+                    .in('student_id', studentIds);
+                    
+                const lecturesPromise = _supabase
+                    .from('lectures')
+                    .select('lecture_id', { count: 'exact', head: true })
+                    .eq('course', userCourse); 
+
+                const [
+                    { data: scores, error: scErr },
+                    { data: summaries, error: suErr },
+                    { count: lecturesCountResult, error: lErr } 
+                ] = await Promise.all([scoresPromise, summaryPromise, lecturesPromise]);
+
+                if (scErr || suErr || lErr) {
+                    console.error('Fetch error (details):', scErr || suErr || lErr);
+                    throw new Error('Failed to fetch some details.');
+                }
+                
+                totalLecturesCount = lecturesCountResult; 
+
+                // 4. Merge Data
                 const scoreMap = new Map(scores.map(s => [s.student_id, s.total_score]));
                 const summaryMap = new Map(summaries.map(s => [s.student_id, s.lecture_percentage]));
 
@@ -652,9 +689,9 @@
                     score: scoreMap.get(student.student_id) || 0,
                     attendance: summaryMap.get(student.student_id) || 0,
                     isBlacklisted: (scoreMap.get(student.student_id) || 0) < 35
-                })).sort((a, b) => b.score - a.score); // Sort by score descending
+                })).sort((a, b) => b.score - a.score); 
 
-                // 4. Calculate Stats
+                // 5. Calculate Stats
                 const totalStudents = allStudentData.length;
                 let totalScore = 0;
                 let totalAttendance = 0;
@@ -667,7 +704,6 @@
                     if (s.isBlacklisted) {
                         blacklistedCount++;
                     }
-                    // Categorize for chart
                     if (s.score >= 80) {
                         performanceCounts.excellent++;
                     } else if (s.score >= 35) {
@@ -680,18 +716,16 @@
                 const avgScore = totalStudents > 0 ? (totalScore / totalStudents) : 0;
                 const avgAttendance = totalStudents > 0 ? (totalAttendance / totalStudents) : 0;
 
-                // 5. Update UI
+                // 6. Update UI
                 statTotalStudents.textContent = totalStudents;
                 statAvgAttendance.textContent = `${avgAttendance.toFixed(0)}%`;
                 statAvgScore.textContent = `${avgScore.toFixed(0)}/100`;
                 statBlacklisted.textContent = blacklistedCount;
 
-                // Render Chart
                 renderPerformanceChart(performanceCounts);
 
-                // Render Top Performers (Top 10 or all if fewer)
                 const topPerformers = allStudentData.slice(0, 10);
-                topPerformersList.innerHTML = ''; // Clear loading
+                topPerformersList.innerHTML = ''; 
                 if (topPerformers.length === 0) {
                      topPerformersList.innerHTML = '<li class="empty-list-message">No student data available.</li>';
                 } else {
@@ -709,9 +743,8 @@
                     });
                 }
                 
-                // Render Blacklisted Students
                 const blacklistedStudents = allStudentData.filter(s => s.isBlacklisted);
-                blacklistedList.innerHTML = ''; // Clear loading
+                blacklistedList.innerHTML = ''; 
                 if (blacklistedStudents.length === 0) {
                     blacklistedList.innerHTML = '<p class="empty-list-message">No students are currently blacklisted.</p>';
                 } else {
@@ -728,13 +761,11 @@
                     });
                 }
 
-                // Enable download button
                 downloadPdfBtn.disabled = false;
 
             } catch (error) {
                 console.error("Error loading analytics:", error);
                 headerSubtitle.textContent = `Error: ${error.message}`;
-                // Optionally disable download button on error
                  downloadPdfBtn.disabled = true;
             }
         }
