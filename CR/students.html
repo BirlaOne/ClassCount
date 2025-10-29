@@ -11,6 +11,8 @@
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         /* -------------------
          * Global Reset & Setup
@@ -51,30 +53,25 @@
          * ------------------- */
         .app-container {
             width: 100%;
-            min-height: 100vh; /* Use min-height for full screen */
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background-color: #FFFFFF; /* White app background */
+            background-color: #FFFFFF;
             position: relative;
-            overflow: hidden; /* Hide overflow */
+            overflow: hidden;
         }
 
         .main-content {
             flex-grow: 1;
-            overflow-y: auto; /* Allow content to scroll */
+            overflow-y: auto;
             padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
-            
-            /* --- Hide scrollbar --- */
-            scrollbar-width: none; /* For Firefox */
-            -ms-overflow-style: none; /* For IE and Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         
-        /* For Chrome, Safari, and Opera */
         .main-content::-webkit-scrollbar {
             display: none;
         }
-        /* --- End Hide scrollbar --- */
-
 
         /* -------------------
          * Header (Student Directory)
@@ -146,6 +143,8 @@
             margin-bottom: 16px;
             box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
             border: 1px solid #f1f1f1;
+            /* Added for search */
+            transition: display 0.2s; 
         }
         
         .card-top {
@@ -173,6 +172,7 @@
             padding: 4px 10px;
             border-radius: 8px;
             border: 1px solid;
+            flex-shrink: 0;
         }
         
         .score-badge.high {
@@ -185,6 +185,12 @@
             color: #d97706;
             background-color: #fffbeb;
             border-color: #fde68a;
+        }
+        
+        .score-badge.low {
+            color: #dc2626;
+            background-color: #fef2f2;
+            border-color: #fecaca;
         }
         
         .card-tags {
@@ -201,24 +207,15 @@
             border-radius: 16px;
             background-color: #f1f5f9;
             color: #475569;
+            text-transform: uppercase;
         }
         
         .tag.icon-tag {
             display: flex;
             align-items: center;
             gap: 4px;
-            background-color: #e0f2fe;
-            color: #0369a1;
-        }
-
-        .tag.icon-tag.cr {
-             background-color: #eef2ff;
-             color: #4338ca;
-        }
-
-        .tag.icon-tag.club {
-             background-color: #f0fdf4;
-             color: #15803d;
+            background-color: #eef2ff;
+            color: #4338ca;
         }
         
         .tag .material-symbols-outlined {
@@ -264,7 +261,7 @@
         .card-stats {
             display: flex;
             justify-content: space-between;
-            text-align: left; /* Aligns with image */
+            text-align: left;
             padding-top: 16px;
             border-top: 1px solid #f1f5f9;
         }
@@ -282,7 +279,6 @@
             color: #1a202c;
         }
 
-
         /* -------------------
          * Bottom Navigation
          * ------------------- */
@@ -297,7 +293,6 @@
             padding: 12px 0 10px 0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
             border-top: 1px solid #e2e8f0;
-            
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
         }
@@ -324,38 +319,28 @@
         
         
         /* -------------------
-         * Mobile-Friendly Media Query
+         * Desktop Media Query
          * ------------------- */
-         
-        /* On screens 500px or wider (desktops), simulate a phone */
         @media (min-width: 500px) {
             body {
-                /* Center the app on desktop */
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 padding: 16px 0;
             }
-            
             .app-container {
-                /* Constrain the width and height */
                 max-width: 450px;
                 height: 95vh;
                 max-height: 850px;
-                
-                /* Add rounded corners and shadow */
                 border-radius: 24px;
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
                 border: 1px solid #f8f9fa;
             }
-            
             .bottom-nav {
-                /* Add rounded corners to match the app container */
                 border-bottom-left-radius: 24px;
                 border-bottom-right-radius: 24px;
             }
         }
-
     </style>
 </head>
 <body>
@@ -366,157 +351,248 @@
 
             <header>
                 <h1>Student Directory</h1>
-                <p>CS 2025 - 5 students</p>
+                <p id="header-subtitle">Loading...</p>
             </header>
 
             <div class="search-bar">
                 <span class="material-symbols-outlined">search</span>
-                <input type="text" placeholder="Search by name or ID...">
+                <input type="text" id="search-input" placeholder="Search by name or ID...">
             </div>
 
-            <div class="student-card">
-                <div class="card-top">
-                    <div>
-                        <div class="name">Rahul Sharma</div>
-                        <div class="id">ID: ST2025001</div>
-                    </div>
-                    <div class="score-badge high">85/100</div>
+            <div id="student-list-container">
+                <p style="text-align: center; color: #718096; padding: 20px 0;">Loading students...</p>
                 </div>
-                <div class="card-tags">
-                    <div class="tag">Computer Science</div>
-                    <div class="tag">2025</div>
-                    <div class="tag icon-tag cr">
-                        <span class="material-symbols-outlined">star</span>
-                        CR
-                    </div>
-                </div>
-                <div class="attendance-section">
-                    <div class="attendance-header">
-                        <span class="label">Lecture Attendance</span>
-                        <span class="percent">92%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress" style="width: 92%;"></div>
-                    </div>
-                </div>
-                <div class="card-stats">
-                    <div class="stat-item">
-                        <span>Lectures</span>
-                        <strong>92%</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Activities</span>
-                        <strong>12</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Roles</span>
-                        <strong>1</strong>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="student-card">
-                <div class="card-top">
-                    <div>
-                        <div class="name">Priya Patel</div>
-                        <div class="id">ID: ST2025002</div>
-                    </div>
-                    <div class="score-badge high">84/100</div>
-                </div>
-                <div class="card-tags">
-                    <div class="tag">Computer Science</div>
-                    <div class="tag">2025</div>
-                    <div class="tag icon-tag club">
-                        <span class="material-symbols-outlined">diversity_3</span>
-                        Club Head
-                    </div>
-                </div>
-                <div class="attendance-section">
-                    <div class="attendance-header">
-                        <span class="label">Lecture Attendance</span>
-                        <span class="percent">88%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress" style="width: 88%;"></div>
-                    </div>
-                </div>
-                <div class="card-stats">
-                    <div class="stat-item">
-                        <span>Lectures</span>
-                        <strong>88%</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Activities</span>
-                        <strong>15</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Roles</span>
-                        <strong>1</strong>
-                    </div>
-                </div>
-            </div>
-
-            <div class="student-card">
-                <div class="card-top">
-                    <div>
-                        <div class="name">Amit Kumar</div>
-                        <div class="id">ID: ST2025003</div>
-                    </div>
-                    <div class="score-badge medium">70/100</div>
-                </div>
-                <div class="card-tags">
-                    <div class="tag">Computer Science</div>
-                    <div class="tag">2025</div>
-                </div>
-                <div class="attendance-section">
-                    <div class="attendance-header">
-                        <span class="label">Lecture Attendance</span>
-                        <span class="percent">78%</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress" style="width: 78%;"></div>
-                    </div>
-                </div>
-                <div class="card-stats">
-                    <div class="stat-item">
-                        <span>Lectures</span>
-                        <strong>78%</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Activities</span>
-                        <strong>5</strong>
-                    </div>
-                    <div class="stat-item">
-                        <span>Roles</span>
-                        <strong>0</strong>
-                    </div>
-                </div>
-            </div>
             
             <div style="height: 50px;"></div>
 
         </main>
 
         <nav class="bottom-nav">
-            <a href="#" class="nav-item">
+            <a href="index.html" class="nav-item">
                 <span class="material-symbols-outlined">home</span>
                 Home
             </a>
-            <a href="#" class="nav-item">
+            <a href="record.html" class="nav-item">
                 <span class="material-symbols-outlined">playlist_add_check</span>
                 Record
             </a>
-            <a href="#" class="nav-item active">
+            <a href="students.html" class="nav-item active">
                 <span class="material-symbols-outlined">groups</span>
                 Students
             </a>
-            <a href="#" class="nav-item">
+            <a href="analytics.html" class="nav-item">
                 <span class="material-symbols-outlined">bar_chart</span>
                 Analytics
             </a>
         </nav>
 
     </div>
+    
+    <script>
+        // --- 1. SUPABASE SETUP ---
+        const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- 2. DOM ELEMENTS ---
+        const headerSubtitle = document.getElementById('header-subtitle');
+        const searchInput = document.getElementById('search-input');
+        const studentListContainer = document.getElementById('student-list-container');
+        
+        /**
+         * Returns a CSS class for the score
+         */
+        function getScoreBadge(score) {
+            if (score >= 80) {
+                return { class: 'high', label: `${score}/100` };
+            } else if (score >= 70) {
+                return { class: 'medium', label: `${score}/100` };
+            } else {
+                return { class: 'low', label: `${score}/100` };
+            }
+        }
+        
+        /**
+         * Main function to load and render the student directory
+         */
+        async function loadStudentDirectory() {
+            try {
+                // 1. Get the logged-in user (CR) to find their course
+                const { data: { user }, error: authError } = await _supabase.auth.getUser();
+                if (authError || !user) {
+                    headerSubtitle.textContent = "Error: Not Logged In";
+                    return;
+                }
+                
+                const { data: crProfile, error: profileError } = await _supabase
+                    .from('users')
+                    .select('course')
+                    .eq('auth_id', user.id)
+                    .single();
+                
+                if (profileError || !crProfile) {
+                    headerSubtitle.textContent = "Error: CR Profile not found";
+                    return;
+                }
+                
+                const userCourse = crProfile.course;
+
+                // 2. Fetch all data needed in parallel
+                
+                // Get all students in that course
+                const studentsPromise = _supabase
+                    .from('students')
+                    .select('*')
+                    .eq('course', userCourse);
+                    
+                // Get all roles for students in that course
+                const rolesPromise = _supabase
+                    .from('users')
+                    .select('id, role') // 'id' in users table matches 'student_id'
+                    .eq('course', userCourse);
+                    
+                // Get all attendance summaries for students in that course
+                const summaryPromise = _supabase
+                    .from('student_attendance_summary')
+                    .select('student_id, lecture_percentage, event_present')
+                    .eq('course', userCourse);
+                    
+                // Get all scores for students in that course
+                const scoresPromise = _supabase
+                    .from('scores')
+                    .select('student_id, total_score')
+                    .eq('course', userCourse); // Assuming 'scores' also has a 'course' column. If not, we'd need to query by student_id list.
+
+                // Await all promises
+                const [
+                    { data: students, error: studentsError },
+                    { data: roles, error: rolesError },
+                    { data: summaries, error: summariesError },
+                    { data: scores, error: scoresError }
+                ] = await Promise.all([studentsPromise, rolesPromise, summaryPromise, scoresPromise]);
+
+                if (studentsError || rolesError || summariesError || scoresError) {
+                    console.error('Data fetch error:', studentsError || rolesError || summariesError || scoresError);
+                    studentListContainer.innerHTML = '<p>Error loading student data.</p>';
+                    return;
+                }
+                
+                // 3. Create Maps for efficient data merging
+                const roleMap = new Map(roles.map(r => [r.id, r.role]));
+                const summaryMap = new Map(summaries.map(s => [s.student_id, s]));
+                const scoreMap = new Map(scores.map(s => [s.student_id, s.total_score]));
+                
+                // 4. Update Header
+                headerSubtitle.textContent = `${userCourse.toUpperCase()} - ${students.length} students`;
+                
+                if (students.length === 0) {
+                    studentListContainer.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px 0;">No students found in this course.</p>';
+                    return;
+                }
+
+                // 5. Render Student Cards
+                let html = '';
+                for (const student of students) {
+                    const student_id = student.student_id;
+                    
+                    // Get data from maps
+                    const role = roleMap.get(student_id);
+                    const summary = summaryMap.get(student_id) || { lecture_percentage: 0, event_present: 0 };
+                    const score = scoreMap.get(student_id) || 0;
+                    
+                    const scoreBadge = getScoreBadge(score);
+                    const lecturePerc = summary.lecture_percentage.toFixed(0);
+                    const roleCount = (role && role.toLowerCase() !== 'student') ? 1 : 0;
+
+                    // Build Tags
+                    let tagsHtml = `
+                        <div class="tag">${student.course.toUpperCase()}</div>
+                        <div class="tag">${student.year}</div>
+                    `;
+                    
+                    if (role && role.toLowerCase() !== 'student') {
+                        tagsHtml += `
+                            <div class="tag icon-tag cr">
+                                <span class="material-symbols-outlined">star</span>
+                                ${role.toUpperCase()}
+                            </div>
+                        `;
+                    }
+                    
+                    // Build Card
+                    html += `
+                        <div class="student-card" data-student-id="${student_id}" data-student-name="${student.name.toLowerCase()}">
+                            <div class="card-top">
+                                <div>
+                                    <div class="name">${student.name}</div>
+                                    <div class="id">ID: ${student_id}</div>
+                                </div>
+                                <div class="score-badge ${scoreBadge.class}">${scoreBadge.label}</div>
+                            </div>
+                            <div class="card-tags">
+                                ${tagsHtml}
+                            </div>
+                            <div class="attendance-section">
+                                <div class="attendance-header">
+                                    <span class="label">Lecture Attendance</span>
+                                    <span class="percent">${lecturePerc}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: ${lecturePerc}%;"></div>
+                                </div>
+                            </div>
+                            <div class="card-stats">
+                                <div class="stat-item">
+                                    <span>Lectures</span>
+                                    <strong>${lecturePerc}%</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>Activities</span>
+                                    <strong>${summary.event_present}</strong>
+                                </div>
+                                <div class="stat-item">
+                                    <span>Roles</span>
+                                    <strong>${roleCount}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                studentListContainer.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading student directory:', error);
+                headerSubtitle.textContent = 'Failed to load data.';
+            }
+        }
+        
+        /**
+         * Filters the student list based on search input
+         */
+        function filterStudents() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const allCards = studentListContainer.querySelectorAll('.student-card');
+            
+            allCards.forEach(card => {
+                const name = card.dataset.studentName;
+                const id = card.dataset.studentId.toString();
+                
+                if (name.includes(searchTerm) || id.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+        
+        // --- 6. EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', loadStudentDirectory);
+        searchInput.addEventListener('input', filterStudents);
+
+    </script>
 
 </body>
 </html>
