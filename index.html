@@ -173,7 +173,6 @@
             color: #16a34a;
             margin-top: 8px;
         }
-         /* Add Good badge style if needed */
         .badge-good {
              display: inline-block;
              font-size: 12px;
@@ -200,7 +199,7 @@
             transition: width 0.5s ease-out;
         }
         .stat-card.attendance .progress { background-color: #16a34a; }
-        .stat-card.score .progress { background-color: #4f46e5; } /* Added */
+        .stat-card.score .progress { background-color: #4f46e5; } 
 
         /* -------------------
          * Your Roles Card
@@ -450,7 +449,6 @@
 
         const { createClient } = supabase;
         const _supabaseMain = createClient(MAIN_SUPABASE_URL, MAIN_SUPABASE_KEY);
-        // Initialize Auth client only if URL and Key are provided
         let _supabaseAuth = null;
         if (AUTH_SUPABASE_URL !== 'YOUR_STUDENT_AUTH_PROJECT_URL' && AUTH_SUPABASE_KEY !== 'YOUR_STUDENT_AUTH_PROJECT_ANON_KEY') {
              _supabaseAuth = createClient(AUTH_SUPABASE_URL, AUTH_SUPABASE_KEY);
@@ -480,23 +478,15 @@
 
         // --- 3. HELPER FUNCTIONS ---
         
-        /**
-         * Gets score level (for badge) - Updated criteria
-         */
         function getScoreLevel(score) {
              if (score >= 50) return { level: 'Excellent', class: 'badge-excel' }; 
              if (score >= 35) return { level: 'Good', class: 'badge-good' }; 
-             // Add 'Needs Improvement' if desired
              return null; 
         }
 
         // --- 4. DATA LOADING & UI UPDATE ---
 
-        /**
-         * Main function to load all student dashboard data
-         */
         async function loadStudentDashboard() {
-            // Check if Auth client is initialized
              if (!_supabaseAuth) {
                  studentNameEl.textContent = 'Error';
                  studentDetailsEl.textContent = 'Auth project not configured.';
@@ -513,7 +503,6 @@
                 // 2. Get student profile (id, course) from Auth Project's 'users' table
                  const { data: studentAuthProfile, error: authProfileError } = await _supabaseAuth
                     .from('users') 
-                    // REMOVED 'role' from select
                     .select('id, course') // 'id' here is the student_id
                     .eq('auth_id', authUser.id) 
                     .single();
@@ -525,21 +514,30 @@
                 
                 const studentId = studentAuthProfile.id;
                 const studentCourse = studentAuthProfile.course;
-                // 'studentRole' is removed
 
 
                 // 3. Fetch data from Main Project using studentId
                 const studentPromise = _supabaseMain.from('students').select('name, year').eq('student_id', studentId).single();
                 const scorePromise = _supabaseMain.from('scores').select('*').eq('student_id', studentId).single();
                 const summaryPromise = _supabaseMain.from('student_attendance_summary').select('lecture_percentage, event_present').eq('student_id', studentId).single();
+                
+                // --- NEW: Fetch roles only if score might be > 0 later ---
+                // We fetch roles in parallel, and decide later if we need them
+                const rolesPromise = _supabaseMain.from('roles').select('role').eq('student_id', studentId);
+
 
                 const [
                     { data: studentDetails, error: sErr },
                     { data: scores, error: scErr },
-                    { data: summary, error: suErr }
-                ] = await Promise.all([studentPromise, scorePromise, summaryPromise]);
+                    { data: summary, error: suErr },
+                    { data: rolesData, error: rErr } // Roles data
+                ] = await Promise.all([studentPromise, scorePromise, summaryPromise, rolesPromise]);
 
                 if (sErr) throw new Error(`Could not fetch student details: ${sErr.message}`);
+                // Don't throw errors for scores, summary, or roles if they might just be missing (no records yet)
+                if (scErr) console.warn("Scores fetch warning:", scErr.message);
+                if (suErr) console.warn("Summary fetch warning:", suErr.message);
+                if (rErr) console.warn("Roles fetch warning:", rErr.message);
                 
                 const studentName = studentDetails?.name || 'Unknown Student';
                 const studentYear = studentDetails?.year || '----';
@@ -551,15 +549,15 @@
                 const lecturePercentage = summary?.lecture_percentage || 0;
                 const activityCount = summary?.event_present || 0;
                 
-                // UPDATED: Role count based on roleScore from Main project
-                const roleCount = roleScore > 0 ? 1 : 0; 
+                // Role count based on *fetched roles*, not just score
+                const actualRoles = rolesData || [];
+                const roleCount = actualRoles.length; 
 
                 // 4. Update Header
                 studentNameEl.textContent = studentName;
                 studentDetailsEl.textContent = `ID: ${studentId} • ${studentCourse.toUpperCase()} ${studentYear}`;
                 studentNameEl.classList.remove('placeholder');
                 studentDetailsEl.classList.remove('placeholder');
-
 
                 // 5. Update Stat Cards
                 statAttendancePerc.textContent = `${lecturePercentage.toFixed(0)}%`;
@@ -572,14 +570,16 @@
                 statActivityCount.textContent = activityCount;
                 statActivityScore.textContent = `Score: ${activityScore}/30`; 
 
-                statRolesCount.textContent = roleCount;
+                statRolesCount.textContent = roleCount; // Use count from roles table
                 statRolesScore.textContent = `Score: ${roleScore}/20`; 
 
                 // 6. Update Roles Card (UPDATED LOGIC)
                 rolesContainer.innerHTML = ''; 
                 if (roleCount > 0) {
-                     // Display a generic tag if score > 0, as we don't have the specific role name
-                     rolesContainer.innerHTML = `<div class="tag">Assigned Role</div>`; 
+                     // Display actual roles from the 'roles' table
+                     actualRoles.forEach(roleObj => {
+                          rolesContainer.innerHTML += `<div class="tag">${roleObj.role.toUpperCase()}</div>`;
+                     });
                 } else {
                      rolesContainer.innerHTML = '<p class="placeholder">No specific roles assigned.</p>';
                 }
@@ -603,7 +603,6 @@
                  studentDetailsEl.classList.remove('placeholder');
             }
         }
-
 
         // --- 5. RUN ON PAGE LOAD ---
         document.addEventListener('DOMContentLoaded', loadStudentDashboard);
