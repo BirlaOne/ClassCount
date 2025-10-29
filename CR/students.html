@@ -414,7 +414,7 @@
             }
         }
         
-        /**
+      /**
          * Main function to load and render the student directory
          */
         async function loadStudentDirectory() {
@@ -439,60 +439,68 @@
                 
                 const userCourse = crProfile.course;
 
-                // 2. Fetch all data needed in parallel
-                
-                // Get all students in that course
-                const studentsPromise = _supabase
+                // 2. Fetch all students in that course FIRST
+                const { data: students, error: studentsError } = await _supabase
                     .from('students')
                     .select('*')
                     .eq('course', userCourse);
-                    
-                // Get all roles for students in that course
-                const rolesPromise = _supabase
-                    .from('users')
-                    .select('id, role') // 'id' in users table matches 'student_id'
-                    .eq('course', userCourse);
-                    
-                // Get all attendance summaries for students in that course
-                const summaryPromise = _supabase
-                    .from('student_attendance_summary')
-                    .select('student_id, lecture_percentage, event_present')
-                    .eq('course', userCourse);
-                    
-                // Get all scores for students in that course
-                const scoresPromise = _supabase
-                    .from('scores')
-                    .select('student_id, total_score')
-                    .eq('course', userCourse); // Assuming 'scores' also has a 'course' column. If not, we'd need to query by student_id list.
-
-                // Await all promises
-                const [
-                    { data: students, error: studentsError },
-                    { data: roles, error: rolesError },
-                    { data: summaries, error: summariesError },
-                    { data: scores, error: scoresError }
-                ] = await Promise.all([studentsPromise, rolesPromise, summaryPromise, scoresPromise]);
-
-                if (studentsError || rolesError || summariesError || scoresError) {
-                    console.error('Data fetch error:', studentsError || rolesError || summariesError || scoresError);
+                
+                if (studentsError) {
+                    console.error('Data fetch error (students):', studentsError);
                     studentListContainer.innerHTML = '<p>Error loading student data.</p>';
                     return;
                 }
-                
-                // 3. Create Maps for efficient data merging
-                const roleMap = new Map(roles.map(r => [r.id, r.role]));
-                const summaryMap = new Map(summaries.map(s => [s.student_id, s]));
-                const scoreMap = new Map(scores.map(s => [s.student_id, s.total_score]));
-                
-                // 4. Update Header
+
+                // 3. Update Header (can do this now)
                 headerSubtitle.textContent = `${userCourse.toUpperCase()} - ${students.length} students`;
-                
+
                 if (students.length === 0) {
                     studentListContainer.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px 0;">No students found in this course.</p>';
                     return;
                 }
 
-                // 5. Render Student Cards
+                // 4. Get the list of student IDs
+                const studentIds = students.map(s => s.student_id);
+
+                // 5. Fetch all other data in parallel using the studentIds
+                const rolesPromise = _supabase
+                    .from('users')
+                    .select('id, role')
+                    .in('id', studentIds); // 'id' in users table matches 'student_id'
+                    
+                const summaryPromise = _supabase
+                    .from('student_attendance_summary')
+                    .select('student_id, lecture_percentage, event_present')
+                    .in('student_id', studentIds);
+                    
+                // --- THIS IS THE FIX ---
+                // We now use .in('student_id', studentIds) instead of .eq('course', ...)
+                const scoresPromise = _supabase
+                    .from('scores')
+                    .select('student_id, total_score')
+                    .in('student_id', studentIds); 
+                // --- END OF FIX ---
+
+                // Await all parallel promises
+                const [
+                    { data: roles, error: rolesError },
+                    { data: summaries, error: summariesError },
+                    { data: scores, error: scoresError }
+                ] = await Promise.all([rolesPromise, summaryPromise, scoresPromise]);
+
+                if (rolesError || summariesError || scoresError) {
+                    console.error('Data fetch error (details):', rolesError || summariesError || scoresError);
+                    studentListContainer.innerHTML = '<p>Error loading student details.</p>';
+                    return;
+                }
+                
+                // 6. Create Maps for efficient data merging
+                // 'id' from 'users' table is the student_id
+                const roleMap = new Map(roles.map(r => [r.id, r.role])); 
+                const summaryMap = new Map(summaries.map(s => [s.student_id, s]));
+                const scoreMap = new Map(scores.map(s => [s.student_id, s.total_score]));
+                
+                // 7. Render Student Cards
                 let html = '';
                 for (const student of students) {
                     const student_id = student.student_id;
