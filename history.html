@@ -398,7 +398,7 @@
 
         // --- 4. DATA LOADING & RENDERING ---
 
-        /**
+       /**
          * Main function to load history
          */
         async function loadHistory() {
@@ -408,20 +408,40 @@
             }
 
             try {
-                // 1. Get Student ID from Auth Project
+                // 1. Get Student ID and Course from Auth Project
                 const { data: { user: authUser }, error: authError } = await _supabaseAuth.auth.getUser();
                 if (authError || !authUser) throw new Error('Not logged in.');
 
+                // Fetch both id and course
                 const { data: studentAuthProfile, error: authProfileError } = await _supabaseAuth
-                    .from('users').select('id').eq('auth_id', authUser.id).single();
+                    .from('users')
+                    .select('id, course') // Fetch course as well
+                    .eq('auth_id', authUser.id)
+                    .single();
+
                 if (authProfileError || !studentAuthProfile) throw new Error('Student profile not found.');
                 
                 const studentId = studentAuthProfile.id;
+                const studentCourse = studentAuthProfile.course; // Get the student's course
 
-                // 2. Fetch all data in parallel from Main Project
-                const lecturesPromise = _supabaseMain.from('lectures').select('*').order('date', { ascending: false });
-                const eventsPromise = _supabaseMain.from('events').select('*').order('date', { ascending: false });
-                const attendancePromise = _supabaseMain.from('attendance_records').select('lecture_id, event_id, status').eq('student_id', studentId);
+                // 2. Fetch data from Main Project
+                // --- MODIFIED LECTURES QUERY ---
+                const lecturesPromise = _supabaseMain
+                    .from('lectures')
+                    .select('*')
+                    .eq('course', studentCourse) // Filter by student's course
+                    .order('date', { ascending: false });
+                // --- END MODIFICATION ---
+                    
+                const eventsPromise = _supabaseMain
+                    .from('events')
+                    .select('*') // Events remain unfiltered (assuming they are college-wide)
+                    .order('date', { ascending: false });
+                    
+                const attendancePromise = _supabaseMain
+                    .from('attendance_records')
+                    .select('lecture_id, event_id, status')
+                    .eq('student_id', studentId);
 
                 const [
                     { data: lectures, error: lErr },
@@ -434,7 +454,7 @@
                     throw new Error("Could not fetch history data.");
                 }
 
-                // 3. Process Attendance Records into Maps for quick lookup
+                // 3. Process Attendance Records into Maps
                 const lectureAttendanceMap = new Map();
                 const eventAttendanceMap = new Map();
                 attendanceRecords.forEach(record => {
@@ -445,10 +465,10 @@
                     }
                 });
 
-                // 4. Render Lectures
+                // 4. Render Lectures (will now only include lectures for the student's course)
                 renderItems(lectures, lectureAttendanceMap, upcomingLecturesContainer, completedLecturesContainer, 'lecture');
                 
-                // 5. Render Activities
+                // 5. Render Activities (all college activities)
                 renderItems(events, eventAttendanceMap, upcomingActivitiesContainer, completedActivitiesContainer, 'event');
 
             } catch (error) {
