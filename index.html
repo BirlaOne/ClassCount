@@ -173,6 +173,17 @@
             color: #16a34a;
             margin-top: 8px;
         }
+         /* Add Good badge style if needed */
+        .badge-good {
+             display: inline-block;
+             font-size: 12px;
+             font-weight: 500;
+             padding: 4px 10px;
+             border-radius: 16px;
+             background-color: #fffbeb; 
+             color: #d97706; 
+             margin-top: 8px;
+        }
         
         .progress-bar {
             width: 100%;
@@ -194,7 +205,7 @@
         /* -------------------
          * Your Roles Card
          * ------------------- */
-        #roles-container .tag { /* Targeting specific container */
+        #roles-container .tag { 
             font-size: 12px;
             font-weight: 500;
             padding: 4px 10px;
@@ -202,11 +213,11 @@
             background-color: #eef2ff;
             color: #4338ca;
             display: inline-block;
-            margin-right: 8px; /* Add spacing between multiple roles */
+            margin-right: 8px; 
             margin-bottom: 8px;
             text-transform: uppercase;
         }
-        #roles-container .placeholder { /* Style for no roles */
+        #roles-container .placeholder { 
              font-size: 14px;
         }
         
@@ -254,7 +265,6 @@
              transition: width 0.5s ease-out;
          }
          
-         /* Specific colors for breakdown bars */
          #breakdown-bar-lecture { background-color: #16a34a; } /* Green */
          #breakdown-bar-activity { background-color: #0ea5e9; } /* Blue */
          #breakdown-bar-role { background-color: #f59e0b; } /* Amber */
@@ -366,7 +376,7 @@
                         Roles
                     </div>
                     <div class="stat-card-main" id="stat-roles-count">--</div>
-                     <div class="stat-card-sub" id="stat-roles-score">Score: --/--</div>
+                    <div class="stat-card-sub" id="stat-roles-score">Score: --/--</div>
                 </div>
             </section>
             
@@ -383,30 +393,30 @@
                 <div class="breakdown-row">
                     <div class="breakdown-header">
                         <span class="breakdown-label">Lecture Attendance (Max 50)</span>
-                         <span class="breakdown-score" id="breakdown-score-lecture">--/50</span>
+                        <span class="breakdown-score" id="breakdown-score-lecture">--/50</span>
                     </div>
                     <div class="breakdown-bar-bg">
-                         <div class="breakdown-bar" id="breakdown-bar-lecture" style="width: 0%;"></div>
+                        <div class="breakdown-bar" id="breakdown-bar-lecture" style="width: 0%;"></div>
                     </div>
                 </div>
                 
                 <div class="breakdown-row">
                     <div class="breakdown-header">
                         <span class="breakdown-label">Activities (Max 30)</span>
-                         <span class="breakdown-score" id="breakdown-score-activity">--/30</span>
+                        <span class="breakdown-score" id="breakdown-score-activity">--/30</span>
                     </div>
                     <div class="breakdown-bar-bg">
-                         <div class="breakdown-bar" id="breakdown-bar-activity" style="width: 0%;"></div>
+                        <div class="breakdown-bar" id="breakdown-bar-activity" style="width: 0%;"></div>
                     </div>
                 </div>
                 
                 <div class="breakdown-row light">
                     <div class="breakdown-header">
                         <span class="breakdown-label">Roles (Max 20)</span>
-                         <span class="breakdown-score" id="breakdown-score-role">--/20</span>
+                        <span class="breakdown-score" id="breakdown-score-role">--/20</span>
                     </div>
                     <div class="breakdown-bar-bg">
-                         <div class="breakdown-bar" id="breakdown-bar-role" style="width: 0%;"></div>
+                        <div class="breakdown-bar" id="breakdown-bar-role" style="width: 0%;"></div>
                     </div>
                 </div>
                 
@@ -417,10 +427,12 @@
         </main>
 
         <nav class="bottom-nav">
-            <a href="index.html" class="nav-item active"> <span class="material-symbols-outlined">dashboard</span>
+            <a href="index.html" class="nav-item active"> 
+                <span class="material-symbols-outlined">dashboard</span>
                 Dashboard
             </a>
-            <a href="history.html" class="nav-item"> <span class="material-symbols-outlined">history</span>
+            <a href="history.html" class="nav-item"> 
+                <span class="material-symbols-outlined">history</span>
                 History
             </a>
         </nav>
@@ -429,18 +441,22 @@
 
     <script>
         // --- 1. SUPABASE SETUP ---
-        // ---- Main ClassCount Project ----
         const MAIN_SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
         const MAIN_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
         
-        // ---- Student Authentication Project ----
         // TODO: Replace with your actual Student Auth Project URL and Key
-        const AUTH_SUPABASE_URL = 'YOUR_STUDENT_AUTH_PROJECT_URL'; 
-        const AUTH_SUPABASE_KEY = 'YOUR_STUDENT_AUTH_PROJECT_ANON_KEY';
+        const AUTH_SUPABASE_URL = 'https://eikriuddsuguybvvyzjl.supabase.co'; 
+        const AUTH_SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpa3JpdWRkc3VndXlidnZ5empsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgxMjIxNTAsImV4cCI6MjA3MzY5ODE1MH0.HNh2gGO8nWzAjxh5Oa3cs_8WKaq9mq9TyLCvPOkcr2c';
 
         const { createClient } = supabase;
         const _supabaseMain = createClient(MAIN_SUPABASE_URL, MAIN_SUPABASE_KEY);
-        const _supabaseAuth = createClient(AUTH_SUPABASE_URL, AUTH_SUPABASE_KEY);
+        // Initialize Auth client only if URL and Key are provided
+        let _supabaseAuth = null;
+        if (AUTH_SUPABASE_URL !== 'YOUR_STUDENT_AUTH_PROJECT_URL' && AUTH_SUPABASE_KEY !== 'YOUR_STUDENT_AUTH_PROJECT_ANON_KEY') {
+             _supabaseAuth = createClient(AUTH_SUPABASE_URL, AUTH_SUPABASE_KEY);
+        } else {
+            console.warn("Student Auth Supabase credentials not set.");
+        }
 
 
         // --- 2. DOM ELEMENTS ---
@@ -465,11 +481,12 @@
         // --- 3. HELPER FUNCTIONS ---
         
         /**
-         * Gets score level (for badge)
+         * Gets score level (for badge) - Updated criteria
          */
         function getScoreLevel(score) {
-             if (score >= 50) return { level: 'Excellent', class: 'badge-excel' }; // Updated threshold
-             // Add more levels if needed
+             if (score >= 50) return { level: 'Excellent', class: 'badge-excel' }; 
+             if (score >= 35) return { level: 'Good', class: 'badge-good' }; 
+             // Add 'Needs Improvement' if desired
              return null; 
         }
 
@@ -479,6 +496,13 @@
          * Main function to load all student dashboard data
          */
         async function loadStudentDashboard() {
+            // Check if Auth client is initialized
+             if (!_supabaseAuth) {
+                 studentNameEl.textContent = 'Error';
+                 studentDetailsEl.textContent = 'Auth project not configured.';
+                 return;
+             }
+             
             try {
                 // 1. Get logged-in student user from Auth Project
                 const { data: { user: authUser }, error: authError } = await _supabaseAuth.auth.getUser();
@@ -486,12 +510,12 @@
                     throw new Error('Not logged in.');
                 }
 
-                // 2. Get student profile (id, course, role) from Auth Project's 'users' table
-                // Assuming the user's auth ID matches the 'auth_id' column in your student 'users' table
+                // 2. Get student profile (id, course) from Auth Project's 'users' table
                  const { data: studentAuthProfile, error: authProfileError } = await _supabaseAuth
                     .from('users') 
-                    .select('id, course, role') // 'id' here is the student_id
-                    .eq('auth_id', authUser.id) // Adjust if the linking column name is different
+                    // REMOVED 'role' from select
+                    .select('id, course') // 'id' here is the student_id
+                    .eq('auth_id', authUser.id) 
                     .single();
 
                 if (authProfileError || !studentAuthProfile) {
@@ -501,7 +525,7 @@
                 
                 const studentId = studentAuthProfile.id;
                 const studentCourse = studentAuthProfile.course;
-                const studentRole = studentAuthProfile.role; // Role from Auth Project
+                // 'studentRole' is removed
 
 
                 // 3. Fetch data from Main Project using studentId
@@ -515,21 +539,20 @@
                     { data: summary, error: suErr }
                 ] = await Promise.all([studentPromise, scorePromise, summaryPromise]);
 
-                // Basic error check - more specific handling could be added
                 if (sErr) throw new Error(`Could not fetch student details: ${sErr.message}`);
-                // Note: Scores or summary might be null if no record exists yet, handle that gracefully
-
+                
                 const studentName = studentDetails?.name || 'Unknown Student';
                 const studentYear = studentDetails?.year || '----';
                 
-                // Use fallback values (0) if score or summary data doesn't exist yet
                 const lectureScore = scores?.lecture_score || 0;
                 const activityScore = scores?.activity_score || 0;
-                const roleScore = scores?.role_score || 0;
+                const roleScore = scores?.role_score || 0; // Role score from Main project
                 const totalScore = scores?.total_score || 0;
                 const lecturePercentage = summary?.lecture_percentage || 0;
                 const activityCount = summary?.event_present || 0;
-                const roleCount = (studentRole && studentRole.toLowerCase() !== 'student') ? 1 : 0; // Count only non-student roles
+                
+                // UPDATED: Role count based on roleScore from Main project
+                const roleCount = roleScore > 0 ? 1 : 0; 
 
                 // 4. Update Header
                 studentNameEl.textContent = studentName;
@@ -547,39 +570,37 @@
                 statScoreBadge.innerHTML = scoreLevel ? `<span class="${scoreLevel.class}">${scoreLevel.level}</span>` : '';
 
                 statActivityCount.textContent = activityCount;
-                statActivityScore.textContent = `Score: ${activityScore}/30`; // Max score hardcoded
+                statActivityScore.textContent = `Score: ${activityScore}/30`; 
 
                 statRolesCount.textContent = roleCount;
-                statRolesScore.textContent = `Score: ${roleScore}/20`; // Max score hardcoded
+                statRolesScore.textContent = `Score: ${roleScore}/20`; 
 
-                // 6. Update Roles Card
-                rolesContainer.innerHTML = ''; // Clear placeholder
+                // 6. Update Roles Card (UPDATED LOGIC)
+                rolesContainer.innerHTML = ''; 
                 if (roleCount > 0) {
-                     rolesContainer.innerHTML = `<div class="tag">${studentRole.toUpperCase()}</div>`;
-                     // Add logic here if a student can have multiple roles
+                     // Display a generic tag if score > 0, as we don't have the specific role name
+                     rolesContainer.innerHTML = `<div class="tag">Assigned Role</div>`; 
                 } else {
                      rolesContainer.innerHTML = '<p class="placeholder">No specific roles assigned.</p>';
                 }
 
                 // 7. Update Score Breakdown
-                breakdownScoreLecture.textContent = `${lectureScore}/50`; // Max score hardcoded
+                breakdownScoreLecture.textContent = `${lectureScore}/50`; 
                 breakdownBarLecture.style.width = `${(lectureScore / 50) * 100}%`; 
                 
-                breakdownScoreActivity.textContent = `${activityScore}/30`; // Max score hardcoded
+                breakdownScoreActivity.textContent = `${activityScore}/30`; 
                 breakdownBarActivity.style.width = `${(activityScore / 30) * 100}%`; 
 
-                breakdownScoreRole.textContent = `${roleScore}/20`; // Max score hardcoded
+                breakdownScoreRole.textContent = `${roleScore}/20`; 
                 breakdownBarRole.style.width = `${(roleScore / 20) * 100}%`; 
 
 
             } catch (error) {
                 console.error("Error loading dashboard:", error);
-                // Display error to user in the header
                 studentNameEl.textContent = 'Error';
                 studentDetailsEl.textContent = error.message;
                  studentNameEl.classList.remove('placeholder');
                  studentDetailsEl.classList.remove('placeholder');
-                 // Optionally clear other fields or show 'N/A'
             }
         }
 
