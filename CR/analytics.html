@@ -17,12 +17,162 @@
 
 
     <style>
-        /* Styles remain largely the same, but ensure these are present */
-        
-        /* ... (Keep all previous CSS styles) ... */
+        /* -------------------
+         * Global Reset & Setup
+         * ------------------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0e5ec; /* Background for desktop view */
+            color: #1a202c;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
 
         /* -------------------
-         * Performance Distribution Card (Reverted to Bar Style)
+         * Icon Styling
+         * ------------------- */
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24;
+            vertical-align: middle;
+            font-size: 20px;
+        }
+
+        /* -------------------
+         * App Layout
+         * ------------------- */
+        .app-container {
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-color: #FFFFFF;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* General Card Style */
+        .card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px; /* Increased margin */
+            box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
+            border: 1px solid #f1f1f1;
+        }
+        
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: #1a202c;
+        }
+        
+        .card-title .material-symbols-outlined {
+            color: #475569;
+        }
+
+        /* Loading Placeholder */
+        .placeholder {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        /* -------------------
+         * Header
+         * ------------------- */
+        header {
+            margin-bottom: 24px;
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            line-height: 1.2;
+        }
+
+        header p {
+            font-size: 16px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        /* -------------------
+         * Analytics Stats Grid
+         * ------------------- */
+        .stats-grid-analytics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card-analytics {
+            background-color: #f8fafc;
+            border: 1px solid #f1f5f9;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .stat-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #718096;
+        }
+        
+        .stat-card-analytics .material-symbols-outlined {
+            font-size: 24px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 8px 0 4px 0;
+            min-height: 34px; /* Prevent layout shift while loading */
+        }
+        
+        /* Icon Colors */
+        .stat-card-analytics.students .material-symbols-outlined { color: #4f46e5; }
+        .stat-card-analytics.attendance .material-symbols-outlined { color: #16a34a; }
+        .stat-card-analytics.score .material-symbols-outlined { color: #f59e0b; }
+        .stat-card-analytics.blacklisted .material-symbols-outlined { color: #ef4444; }
+        
+        
+        /* -------------------
+         * Performance Distribution Card
          * ------------------- */
         .dist-row {
             margin-bottom: 14px;
@@ -71,8 +221,227 @@
         .dist-count.needs { color: #ef4444; }
         .dist-bar.needs { background-color: #fee2e2; } /* Light Red */
 
-        /* ... (Rest of CSS styles) ... */
+        /* -------------------
+         * Top Performers Card
+         * ------------------- */
+        .performer-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .performer-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .performer-item:first-child {
+            padding-top: 0;
+        }
+        .performer-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        
+        .rank {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #4f46e5;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        
+        .performer-info {
+            flex-grow: 1;
+        }
+        
+        .performer-name {
+            font-weight: 600;
+            color: #1a202c;
+        }
+        
+        .performer-sub {
+            font-size: 14px;
+            color: #718096;
+        }
+        
+        .performer-score {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 16px;
+            background-color: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+            flex-shrink: 0;
+        }
 
+        /* -------------------
+         * Blacklisted Students Card
+         * ------------------- */
+        .blacklisted-card {
+            background-color: #fef2f2;
+            border: 1px solid #fee2e2;
+        }
+        
+        .blacklisted-card .card-title .material-symbols-outlined {
+            color: #ef4444;
+        }
+        
+        .card-subtitle {
+            font-size: 14px;
+            color: #b91c1c;
+            margin-top: -12px;
+            margin-bottom: 16px;
+        }
+        
+        .blacklisted-list {
+             display: flex;
+             flex-direction: column;
+             gap: 10px;
+        }
+        
+        .blacklisted-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #ffffff;
+            border: 1px solid #fecaca;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .blacklisted-name {
+            font-weight: 600;
+            color: #1a202c;
+        }
+        
+        .blacklisted-id {
+            font-size: 14px;
+            color: #718096;
+        }
+        
+        .score-badge-danger {
+            font-size: 14px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 16px;
+            background-color: #ef4444;
+            color: #ffffff;
+            flex-shrink: 0;
+        }
+        
+        /* Empty state for lists */
+        .empty-list-message {
+            font-size: 14px;
+            color: #718096;
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        /* -------------------
+         * Download Button (UPDATED)
+         * ------------------- */
+        .download-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            /* Blue Gradient */
+            background-image: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%); 
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 8px; /* Add some space */
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); /* Blue shadow */
+        }
+        .download-btn:active {
+            transform: scale(0.98);
+             box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+        .download-btn:disabled {
+             background-image: none;
+             background-color: #cbd5e1;
+             cursor: wait;
+             box-shadow: none;
+        }
+
+        /* -------------------
+         * Bottom Navigation
+         * ------------------- */
+        .bottom-nav {
+            position: absolute; 
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #ffffff; 
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0 10px 0;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+            border-top: 1px solid #e2e8f0;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #718096;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .nav-item .material-symbols-outlined {
+            font-size: 26px;
+            margin-bottom: 2px;
+        }
+        .nav-item.active {
+            color: #4f46e5;
+        }
+        .nav-item.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1;
+        }
+        
+        
+        /* -------------------
+         * Desktop Media Query
+         * ------------------- */
+        @media (min-width: 500px) {
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 16px 0;
+            }
+            .app-container {
+                max-width: 450px;
+                height: 95vh;
+                max-height: 850px;
+                border-radius: 24px;
+                box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+                border: 1px solid #f8f9fa;
+            }
+            .bottom-nav {
+                border-bottom-left-radius: 24px;
+                border-bottom-right-radius: 24px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -128,7 +497,7 @@
                 
                 <div class="dist-row">
                     <div class="dist-header">
-                        <span class="dist-label">Excellent (≥80)</span>
+                        <span class="dist-label">Excellent (≥50)</span> 
                         <span class="dist-count excellent" id="dist-count-excellent">...</span>
                     </div>
                     <div class="dist-bar-bg">
@@ -138,7 +507,7 @@
                 
                 <div class="dist-row">
                     <div class="dist-header">
-                        <span class="dist-label">Good (35-79)</span>
+                        <span class="dist-label">Good (35-49)</span> 
                         <span class="dist-count good" id="dist-count-good">...</span>
                     </div>
                     <div class="dist-bar-bg">
@@ -221,9 +590,9 @@
 
         // --- 2. GLOBAL VARIABLES ---
         let userCourse = null;
-        let allStudentData = []; // To store merged data for PDF
-        let totalLecturesCount = 0; // For PDF summary
-        let performanceCountsGlobal = { excellent: 0, good: 0, needs: 0 }; // Store counts for PDF
+        let allStudentData = []; 
+        let totalLecturesCount = 0; 
+        let performanceCountsGlobal = { excellent: 0, good: 0, needs: 0 }; 
 
         // --- 3. DOM ELEMENTS ---
         const headerSubtitle = document.getElementById('header-subtitle');
@@ -231,14 +600,12 @@
         const statAvgAttendance = document.getElementById('stat-avg-attendance');
         const statAvgScore = document.getElementById('stat-avg-score');
         const statBlacklisted = document.getElementById('stat-blacklisted');
-        // --- Distribution Elements ---
         const distCountExcellent = document.getElementById('dist-count-excellent');
         const distBarExcellent = document.getElementById('dist-bar-excellent');
         const distCountGood = document.getElementById('dist-count-good');
         const distBarGood = document.getElementById('dist-bar-good');
         const distCountNeeds = document.getElementById('dist-count-needs');
         const distBarNeeds = document.getElementById('dist-bar-needs');
-        // --- List Elements ---
         const topPerformersList = document.getElementById('top-performers-list');
         const blacklistedList = document.getElementById('blacklisted-list');
         const downloadPdfBtn = document.getElementById('download-pdf-btn');
@@ -285,7 +652,6 @@
                      statAvgAttendance.textContent = '0%';
                      statAvgScore.textContent = '0/100';
                      statBlacklisted.textContent = 0;
-                     // Update distribution bars/counts to 0
                      distCountExcellent.textContent = '0 students';
                      distBarExcellent.style.width = '0%';
                      distCountGood.textContent = '0 students';
@@ -324,7 +690,8 @@
                     ...student,
                     score: scoreMap.get(student.student_id) || 0,
                     attendance: summaryMap.get(student.student_id) || 0,
-                    isBlacklisted: (scoreMap.get(student.student_id) || 0) < 35
+                    // Blacklist criteria updated here
+                    isBlacklisted: (scoreMap.get(student.student_id) || 0) < 35 
                 })).sort((a, b) => b.score - a.score); 
 
                 // 5. Calculate Stats & Distribution
@@ -332,7 +699,6 @@
                 let totalScore = 0;
                 let totalAttendance = 0;
                 let blacklistedCount = 0;
-                // Reset global counts
                 performanceCountsGlobal = { excellent: 0, good: 0, needs: 0 }; 
 
                 allStudentData.forEach(s => {
@@ -341,13 +707,15 @@
                     if (s.isBlacklisted) {
                         blacklistedCount++;
                     }
-                    if (s.score >= 80) {
+                    // --- UPDATED SCORE RANGES ---
+                    if (s.score >= 50) { 
                         performanceCountsGlobal.excellent++;
-                    } else if (s.score >= 35) {
+                    } else if (s.score >= 35) { 
                         performanceCountsGlobal.good++;
                     } else {
                         performanceCountsGlobal.needs++;
                     }
+                    // --- END UPDATE ---
                 });
 
                 const avgScore = totalStudents > 0 ? (totalScore / totalStudents) : 0;
@@ -359,15 +727,14 @@
                 statAvgScore.textContent = `${avgScore.toFixed(0)}/100`;
                 statBlacklisted.textContent = blacklistedCount;
 
-                // --- UPDATE DISTRIBUTION BARS ---
-                const totalDist = totalStudents || 1; // Avoid division by zero
+                // Update distribution bars/counts
+                const totalDist = totalStudents || 1; 
                 distCountExcellent.textContent = `${performanceCountsGlobal.excellent} students`;
                 distBarExcellent.style.width = `${(performanceCountsGlobal.excellent / totalDist) * 100}%`;
                 distCountGood.textContent = `${performanceCountsGlobal.good} students`;
                 distBarGood.style.width = `${(performanceCountsGlobal.good / totalDist) * 100}%`;
                 distCountNeeds.textContent = `${performanceCountsGlobal.needs} students`;
                 distBarNeeds.style.width = `${(performanceCountsGlobal.needs / totalDist) * 100}%`;
-                // --- END UPDATE ---
 
                 // Render Top Performers
                 const topPerformers = allStudentData.slice(0, 10);
@@ -455,13 +822,13 @@
                 headStyles: { fillColor: [79, 70, 229] }, 
             });
 
-            // --- Performance Distribution Table (Replaced Chart) ---
+            // --- Performance Distribution Table (UPDATED LABELS) ---
             const distStartY = doc.lastAutoTable.finalY + 10;
             doc.setFontSize(14);
             doc.text("Performance Distribution", 14, distStartY);
             const distData = [
-                ['Excellent (≥80)', `${performanceCountsGlobal.excellent} students`],
-                ['Good (35-79)', `${performanceCountsGlobal.good} students`],
+                ['Excellent (≥50)', `${performanceCountsGlobal.excellent} students`],
+                ['Good (35-49)', `${performanceCountsGlobal.good} students`], // Updated range
                 ['Needs Improvement (<35)', `${performanceCountsGlobal.needs} students`]
             ];
              doc.autoTable({
@@ -472,9 +839,8 @@
                 headStyles: { fillColor: [79, 70, 229] }, 
             });
 
-
             // --- Student Details Table ---
-            const tableStartY = doc.lastAutoTable.finalY + 10; // Position after distribution table
+            const tableStartY = doc.lastAutoTable.finalY + 10; 
             doc.setFontSize(14);
             doc.text("Student Details", 14, tableStartY);
             
@@ -488,7 +854,7 @@
 
             doc.autoTable({
                 startY: tableStartY + 5,
-                head: [['ID', 'Name', 'Score', 'Attendance', 'Blacklisted']],
+                head: [['ID', 'Name', 'Score', 'Attendance', 'Blacklisted (<35)']], // Updated header
                 body: tableData,
                 theme: 'striped',
                 headStyles: { fillColor: [79, 70, 229] }, 
@@ -509,7 +875,6 @@
             downloadPdfBtn.innerHTML = '<span class="material-symbols-outlined">download</span> Download Report (PDF)';
 
         }
-
 
         // --- 6. EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', loadAnalyticsData);
