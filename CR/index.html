@@ -11,6 +11,8 @@
     
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
         /* -------------------
          * Global Reset & Setup
@@ -51,30 +53,25 @@
          * ------------------- */
         .app-container {
             width: 100%;
-            min-height: 100vh; /* Use min-height for full screen */
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            background-color: #FFFFFF; /* White app background */
+            background-color: #FFFFFF;
             position: relative;
-            overflow: hidden; /* Hide overflow */
+            overflow: hidden;
         }
 
         .main-content {
             flex-grow: 1;
-            overflow-y: auto; /* Allow content to scroll */
+            overflow-y: auto;
             padding: 24px 20px 100px 20px; /* Bottom padding to avoid nav overlap */
-            
-            /* --- Hide scrollbar --- */
-            scrollbar-width: none; /* For Firefox */
-            -ms-overflow-style: none; /* For IE and Edge */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
         }
         
-        /* For Chrome, Safari, and Opera */
         .main-content::-webkit-scrollbar {
             display: none;
         }
-        /* --- End Hide scrollbar --- */
-
 
         section {
             margin-bottom: 28px;
@@ -114,7 +111,7 @@
         }
 
         /* -------------------
-         * Stats Grid (New Layout)
+         * Stats Grid
          * ------------------- */
         .stats-grid {
             display: grid;
@@ -165,29 +162,21 @@
         }
 
         /* Card specific gradients and icon colors */
-        .stat-card.students {
-            background-color: #f5f3ff;
-        }
+        .stat-card.students { background-color: #f5f3ff; }
         .stat-card.students .stat-icon { color: #6366f1; }
         
-        .stat-card.attendance {
-            background-color: #f0fdf4;
-        }
+        .stat-card.attendance { background-color: #f0fdf4; }
         .stat-card.attendance .stat-icon { color: #22c55e; }
         
-        .stat-card.score {
-            background-color: #fffbeb;
-        }
+        .stat-card.score { background-color: #fffbeb; }
         .stat-card.score .stat-icon { color: #f59e0b; }
         
-        .stat-card.blacklisted {
-            background-color: #fef2f2;
-        }
+        .stat-card.blacklisted { background-color: #fef2f2; }
         .stat-card.blacklisted .stat-icon { color: #ef4444; }
 
 
         /* -------------------
-         * Quick Actions (REVERTED)
+         * Quick Actions
          * ------------------- */
         .actions-container {
             display: grid;
@@ -195,8 +184,9 @@
             gap: 16px;
         }
 
+        /* UPDATED: Buttons are now <a> tags */
         .action-btn {
-            border: none;
+            text-decoration: none;
             border-radius: 12px;
             padding: 16px;
             font-size: 16px;
@@ -225,12 +215,9 @@
         .action-btn.schedule {
             background-image: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
         }
-        /* --- This is the reverted style --- */
         .action-btn.record {
             background-image: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
         }
-        /* --- End reverted style --- */
-
 
         /* -------------------
          * Upcoming Sections
@@ -260,7 +247,7 @@
             padding: 16px;
             margin-bottom: 12px;
             box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
-            border: 1px solid #f1f1f1; /* Light border for card */
+            border: 1px solid #f1f1f1;
         }
         .card-header {
             display: flex;
@@ -312,6 +299,14 @@
             color: #718096;
         }
 
+        /* Placeholder for empty lists */
+        .empty-state {
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #718096;
+            padding: 20px 0;
+        }
 
         /* -------------------
          * Bottom Navigation
@@ -327,7 +322,6 @@
             padding: 12px 0 10px 0;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
             border-top: 1px solid #e2e8f0;
-            
             border-top-left-radius: 20px;
             border-top-right-radius: 20px;
         }
@@ -352,40 +346,29 @@
             font-variation-settings: 'FILL' 1;
         }
         
-        
         /* -------------------
-         * Mobile-Friendly Media Query
+         * Desktop Media Query
          * ------------------- */
-         
-        /* On screens 500px or wider (desktops), simulate a phone */
         @media (min-width: 500px) {
             body {
-                /* Center the app on desktop */
                 display: flex;
                 justify-content: center;
                 align-items: center;
                 padding: 16px 0;
             }
-            
             .app-container {
-                /* Constrain the width and height */
                 max-width: 450px;
                 height: 95vh;
                 max-height: 850px;
-                
-                /* Add rounded corners and shadow */
                 border-radius: 24px;
                 box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
                 border: 1px solid #f8f9fa;
             }
-            
             .bottom-nav {
-                /* Add rounded corners to match the app container */
                 border-bottom-left-radius: 24px;
                 border-bottom-right-radius: 24px;
             }
         }
-
     </style>
 </head>
 <body>
@@ -396,7 +379,7 @@
 
             <header>
                 <h1>Attendance Portal</h1>
-                <p>CR Dashboard - CS 2025</p>
+                <p id="dashboard-title">Loading dashboard...</p>
             </header>
 
             <section class="stats-grid">
@@ -407,7 +390,7 @@
                     </div>
                     <div class="stat-info">
                         <span>Total Students</span>
-                        <strong>5</strong>
+                        <strong id="total-students">...</strong>
                     </div>
                 </div>
                 
@@ -417,7 +400,7 @@
                     </div>
                     <div class="stat-info">
                         <span>Avg Attendance</span>
-                        <strong>84%</strong>
+                        <strong id="avg-attendance">...</strong>
                     </div>
                 </div>
                 
@@ -427,7 +410,7 @@
                     </div>
                     <div class="stat-info">
                         <span>Avg Score</span>
-                        <strong>76/100</strong>
+                        <strong id="avg-score">...</strong>
                     </div>
                 </div>
                 
@@ -437,7 +420,7 @@
                     </div>
                     <div class="stat-info">
                         <span>Blacklisted</span>
-                        <strong>1</strong>
+                        <strong id="blacklisted-count">...</strong>
                     </div>
                 </div>
             
@@ -446,14 +429,14 @@
             <section class="quick-actions">
                 <h2>Quick Actions</h2>
                 <div class="actions-container">
-                    <button class="action-btn schedule">
+                    <a href="schedulelecture.html" class="action-btn schedule">
                         <span class="material-symbols-outlined">calendar_month</span>
                         <span>Schedule Lecture</span>
-                    </button>
-                    <button class="action-btn record">
+                    </a>
+                    <a href="record.html" class="action-btn record">
                         <span class="material-symbols-outlined">task_alt</span>
                         <span>Record Attendance</span>
-                    </button>
+                    </a>
                 </div>
             </section>
 
@@ -463,28 +446,11 @@
                         <span class="material-symbols-outlined">book</span>
                         Upcoming Lectures
                     </h2>
-                    <span class="count-badge">1</span>
+                    <span class="count-badge" id="lectures-count">...</span>
                 </div>
-
-                <div class="card lecture-card">
-                    <div class="card-header">
-                        <div>
-                            <h3>Database Management</h3>
-                            <p class="subtitle">Prof. Sanjay Verma</p>
-                        </div>
-                        <span class="badge cs">CS 2025</span>
+                
+                <div id="upcoming-lectures-container">
                     </div>
-                    <div class="card-footer">
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">calendar_month</span>
-                            25/10/2025
-                        </div>
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">schedule</span>
-                            11:00 AM - 12:00 PM
-                        </div>
-                    </div>
-                </div>
             </section>
 
             <section class="upcoming-section upcoming-activities">
@@ -493,48 +459,11 @@
                         <span class="material-symbols-outlined">celebration</span>
                         Upcoming Activities
                     </h2>
-                    <span class="count-badge">2</span>
+                    <span class="count-badge" id="activities-count">...</span>
                 </div>
 
-                <div class="card activity-card">
-                    <div class="card-header">
-                        <div>
-                            <h3>Tech Fest 2025</h3>
-                            <p class="subtitle">Technical Club</p>
-                        </div>
-                        <span class="badge college">College-wide</span>
+                <div id="upcoming-activities-container">
                     </div>
-                    <div class="card-footer">
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">calendar_month</span>
-                            28/10/2025
-                        </div>
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">schedule</span>
-                            10:00 AM - 05:00 PM
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="card activity-card">
-                    <div class="card-header">
-                        <div>
-                            <h3>Hackathon 2025</h3>
-                            <p class="subtitle">Technical Club</p>
-                        </div>
-                        <span class="badge college">College-wide</span>
-                    </div>
-                     <div class="card-footer">
-                        <div class="info-item">
-                            <span class="material-symbols-outlined">calendar_month</span>
-                            TBA
-                        </div>
-                         <div class="info-item">
-                            <span class="material-symbols-outlined">schedule</span>
-                            TBA
-                        </div>
-                    </div>
-                </div>
             </section>
             
             <div style="height: 50px;"></div>
@@ -542,25 +471,296 @@
         </main>
 
         <nav class="bottom-nav">
-            <a href="#" class="nav-item active">
+            <a href="index.html" class="nav-item active">
                 <span class="material-symbols-outlined">home</span>
                 Home
             </a>
-            <a href="#" class="nav-item">
+            <a href="record.html" class="nav-item">
                 <span class="material-symbols-outlined">playlist_add_check</span>
                 Record
             </a>
-            <a href="#" class="nav-item">
+            <a href="students.html" class="nav-item">
                 <span class="material-symbols-outlined">groups</span>
                 Students
             </a>
-            <a href="#" class="nav-item">
+            <a href="analytics.html" class="nav-item">
                 <span class="material-symbols-outlined">bar_chart</span>
                 Analytics
             </a>
         </nav>
 
     </div>
+
+    <script>
+        // --- 1. SUPABASE SETUP ---
+        const SUPABASE_URL = 'https://qbtxcpyjceemqdqipcdd.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFidHhjcHlqY2VlbXFkcWlwY2RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE0MjQ3ODYsImV4cCI6MjA3NzAwMDc4Nn0.xlYnj-EKqXcqFlYdx4Us1iEI2OoRV2IjtAyLIG6PVok';
+
+        const { createClient } = supabase;
+        const _supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- 2. DOM ELEMENTS ---
+        const dashboardTitle = document.getElementById('dashboard-title');
+        const totalStudentsEl = document.getElementById('total-students');
+        const avgAttendanceEl = document.getElementById('avg-attendance');
+        const avgScoreEl = document.getElementById('avg-score');
+        const blacklistedEl = document.getElementById('blacklisted-count');
+        const lecturesContainer = document.getElementById('upcoming-lectures-container');
+        const lecturesCount = document.getElementById('lectures-count');
+        const activitiesContainer = document.getElementById('upcoming-activities-container');
+        const activitiesCount = document.getElementById('activities-count');
+
+        // --- 3. HELPER FUNCTIONS ---
+        
+        /**
+         * Helper to format time from 'HH:mm:ss' to 'HH:mm AM/PM'
+         */
+        function formatTime(timeString) {
+            if (!timeString) return 'TBA';
+            const [hours, minutes] = timeString.split(':');
+            const d = new Date();
+            d.setHours(parseInt(hours));
+            d.setMinutes(parseInt(minutes));
+            return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        /**
+         * Helper to format date from 'YYYY-MM-DD' to 'DD/MM/YYYY'
+         */
+         function formatDate(dateString) {
+             if (!dateString) return 'TBA';
+             const [year, month, day] = dateString.split('-');
+             return `${day}/${month}/${year}`;
+         }
+
+        /**
+         * Gets today's date in YYYY-MM-DD format for Supabase queries
+         */
+        function getTodayISO() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // --- 4. DATA LOADING FUNCTIONS ---
+
+        /**
+         * Gets the logged-in user's profile from the 'users' table
+         */
+        async function getUserProfile() {
+            const { data: { user }, error: authError } = await _supabase.auth.getUser();
+            if (authError || !user) {
+                dashboardTitle.textContent = "Error: Not Logged In";
+                throw new Error('User not logged in');
+            }
+
+            const { data: profile, error: profileError } = await _supabase
+                .from('users')
+                .select('course')
+                .eq('auth_id', user.id)
+                .single();
+            
+            if (profileError || !profile) {
+                dashboardTitle.textContent = "Error: Profile not found";
+                throw new Error('User profile not found');
+            }
+
+            return profile;
+        }
+
+        /**
+         * Loads all 4 stat cards
+         */
+        async function loadStats(userCourse) {
+            // 1. Get all summary data for the course
+            const { data: summaries, error } = await _supabase
+                .from('student_attendance_summary')
+                .select('student_id, lecture_percentage')
+                .eq('course', userCourse);
+
+            if (error || !summaries) {
+                console.error('Error fetching summaries:', error);
+                return;
+            }
+
+            // 1. Total Students
+            const totalStudents = summaries.length;
+            totalStudentsEl.textContent = totalStudents;
+
+            if (totalStudents > 0) {
+                // 2. Avg Attendance
+                const totalPercentage = summaries.reduce((acc, s) => acc + s.lecture_percentage, 0);
+                const avgAttendance = totalPercentage / totalStudents;
+                avgAttendanceEl.textContent = `${avgAttendance.toFixed(0)}%`;
+
+                // 3. Blacklisted
+                const blacklistedCount = summaries.filter(s => s.lecture_percentage < 75).length;
+                blacklistedEl.textContent = blacklistedCount;
+
+                // 4. Avg Score
+                const studentIds = summaries.map(s => s.student_id);
+                const { data: scores, error: scoreError } = await _supabase
+                    .from('scores')
+                    .select('total_score')
+                    .in('student_id', studentIds);
+
+                if (scoreError) {
+                    console.error('Error fetching scores:', scoreError);
+                    avgScoreEl.textContent = 'N/A';
+                    return;
+                }
+
+                if (scores.length > 0) {
+                    const totalScore = scores.reduce((acc, s) => acc + s.total_score, 0);
+                    const avgScore = totalScore / scores.length;
+                    avgScoreEl.textContent = `${avgScore.toFixed(0)}/100`;
+                } else {
+                    avgScoreEl.textContent = '0/100';
+                }
+
+            } else {
+                avgAttendanceEl.textContent = '0%';
+                blacklistedEl.textContent = '0';
+                avgScoreEl.textContent = '0/100';
+            }
+        }
+
+        /**
+         * Loads upcoming lectures
+         */
+        async function loadUpcomingLectures(userCourse) {
+            const today = getTodayISO();
+            const { data: lectures, error } = await _supabase
+                .from('lectures')
+                .select('*')
+                .eq('course', userCourse)
+                .gte('date', today)
+                .order('date', { ascending: true });
+
+            if (error) {
+                console.error('Error fetching lectures:', error);
+                lecturesContainer.innerHTML = '<p class="empty-state">Could not load lectures.</p>';
+                return;
+            }
+            
+            lecturesCount.textContent = lectures.length;
+            if (lectures.length === 0) {
+                lecturesContainer.innerHTML = '<p class="empty-state">No upcoming lectures.</p>';
+                return;
+            }
+
+            let html = '';
+            lectures.forEach(lecture => {
+                html += `
+                    <div class="card lecture-card">
+                        <div class="card-header">
+                            <div>
+                                <h3>${lecture.subject_name}</h3>
+                                <p class="subtitle">${lecture.prof_name}</p>
+                            </div>
+                            <span class="badge cs">${lecture.course.toUpperCase()}</span>
+                        </div>
+                        <div class="card-footer">
+                            <div class="info-item">
+                                <span class="material-symbols-outlined">calendar_month</span>
+                                ${formatDate(lecture.date)}
+                            </div>
+                            <div class="info-item">
+                                <span class="material-symbols-outlined">schedule</span>
+                                ${formatTime(lecture.start_time)} - ${formatTime(lecture.end_time)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            lecturesContainer.innerHTML = html;
+        }
+
+        /**
+         * Loads upcoming activities (college-wide)
+         */
+        async function loadUpcomingActivities() {
+            const today = getTodayISO();
+
+            // We need two queries: one for future dates and one for NULL dates (TBA)
+            const { data: datedEvents, error1 } = await _supabase
+                .from('events')
+                .select('*')
+                .gte('date', today)
+                .order('date', { ascending: true });
+            
+            const { data: tbaEvents, error2 } = await _supabase
+                .from('events')
+                .select('*')
+                .is('date', null);
+
+            if (error1 || error2) {
+                console.error('Error fetching events:', error1 || error2);
+                activitiesContainer.innerHTML = '<p class="empty-state">Could not load activities.</p>';
+                return;
+            }
+            
+            const events = [...datedEvents, ...tbaEvents]; // Combine lists
+
+            activitiesCount.textContent = events.length;
+            if (events.length === 0) {
+                activitiesContainer.innerHTML = '<p class="empty-state">No upcoming activities.</p>';
+                return;
+            }
+
+            let html = '';
+            events.forEach(event => {
+                html += `
+                    <div class="card activity-card">
+                        <div class="card-header">
+                            <div>
+                                <h3>${event.event_name}</h3>
+                                <p class="subtitle">${event.organization_name}</p>
+                            </div>
+                            <span class="badge college">College-wide</span>
+                        </div>
+                        <div class="card-footer">
+                            <div class="info-item">
+                                <span class="material-symbols-outlined">calendar_month</span>
+                                ${formatDate(event.date)}
+                            </div>
+                            <div class="info-item">
+                                <span class="material-symbols-outlined">schedule</span>
+                                ${formatTime(event.start_time)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            activitiesContainer.innerHTML = html;
+        }
+
+        /**
+         * Main function to load all dashboard data
+         */
+        async function loadDashboard() {
+            try {
+                const profile = await getUserProfile();
+                const userCourse = profile.course;
+                
+                // Update header
+                dashboardTitle.textContent = `CR Dashboard - ${userCourse.toUpperCase()}`;
+
+                // Load all sections in parallel for speed
+                await Promise.all([
+                    loadStats(userCourse),
+                    loadUpcomingLectures(userCourse),
+                    loadUpcomingActivities()
+                ]);
+
+            } catch (error) {
+                console.error('Failed to load dashboard:', error.message);
+                // Error is already shown in the dashboard title
+            }
+        }
+
+        // --- 5. RUN ON PAGE LOAD ---
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+
+    </script>
 
 </body>
 </html>
