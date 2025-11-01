@@ -184,7 +184,6 @@
             gap: 16px;
         }
 
-        /* UPDATED: Buttons are now <a> tags */
         .action-btn {
             text-decoration: none;
             border-radius: 12px;
@@ -512,9 +511,6 @@
 
         // --- 3. HELPER FUNCTIONS ---
         
-        /**
-         * Helper to format time from 'HH:mm:ss' to 'HH:mm AM/PM'
-         */
         function formatTime(timeString) {
             if (!timeString) return 'TBA';
             const [hours, minutes] = timeString.split(':');
@@ -524,18 +520,12 @@
             return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
         }
         
-        /**
-         * Helper to format date from 'YYYY-MM-DD' to 'DD/MM/YYYY'
-         */
          function formatDate(dateString) {
              if (!dateString) return 'TBA';
              const [year, month, day] = dateString.split('-');
              return `${day}/${month}/${year}`;
          }
 
-        /**
-         * Gets today's date in YYYY-MM-DD format for Supabase queries
-         */
         function getTodayISO() {
             return new Date().toISOString().split('T')[0];
         }
@@ -547,10 +537,15 @@
          */
         async function getUserProfile() {
             const { data: { user }, error: authError } = await _supabase.auth.getUser();
+            
+            // --- NEW: AUTH CHECK & REDIRECT ---
             if (authError || !user) {
-                dashboardTitle.textContent = "Error: Not Logged In";
-                throw new Error('User not logged in');
+                dashboardTitle.textContent = "Redirecting to login...";
+                // Make sure 'login.html' is the correct path to your login page
+                window.location.href = 'login.html'; 
+                throw new Error('User not logged in, redirecting.'); 
             }
+            // --- END AUTH CHECK ---
 
             const { data: profile, error: profileError } = await _supabase
                 .from('users')
@@ -591,11 +586,7 @@
                 const avgAttendance = totalPercentage / totalStudents;
                 avgAttendanceEl.textContent = `${avgAttendance.toFixed(0)}%`;
 
-                // 3. Blacklisted
-                const blacklistedCount = summaries.filter(s => s.lecture_percentage < 75).length;
-                blacklistedEl.textContent = blacklistedCount;
-
-                // 4. Avg Score
+                // 3. Get Scores for Avg Score and Blacklist
                 const studentIds = summaries.map(s => s.student_id);
                 const { data: scores, error: scoreError } = await _supabase
                     .from('scores')
@@ -605,20 +596,29 @@
                 if (scoreError) {
                     console.error('Error fetching scores:', scoreError);
                     avgScoreEl.textContent = 'N/A';
+                    blacklistedEl.textContent = 'N/A'; // Also set blacklist to N/A
                     return;
                 }
 
                 if (scores.length > 0) {
+                    // 4. Avg Score
                     const totalScore = scores.reduce((acc, s) => acc + s.total_score, 0);
                     const avgScore = totalScore / scores.length;
                     avgScoreEl.textContent = `${avgScore.toFixed(0)}/100`;
+                    
+                    // --- UPDATED BLACKLIST LOGIC ---
+                    const blacklistedCount = scores.filter(s => s.total_score < 35).length;
+                    blacklistedEl.textContent = blacklistedCount;
+                    // --- END UPDATED LOGIC ---
+                    
                 } else {
                     avgScoreEl.textContent = '0/100';
+                    blacklistedEl.textContent = '0'; // Set blacklist to 0 if no scores
                 }
 
             } else {
                 avgAttendanceEl.textContent = '0%';
-                blacklistedEl.textContent = '0';
+                blacklistedEl.textContent = '0'; // Set blacklist to 0 if no students
                 avgScoreEl.textContent = '0/100';
             }
         }
@@ -680,7 +680,6 @@
         async function loadUpcomingActivities() {
             const today = getTodayISO();
 
-            // We need two queries: one for future dates and one for NULL dates (TBA)
             const { data: datedEvents, error1 } = await _supabase
                 .from('events')
                 .select('*')
@@ -698,7 +697,7 @@
                 return;
             }
             
-            const events = [...datedEvents, ...tbaEvents]; // Combine lists
+            const events = [...datedEvents, ...tbaEvents]; 
 
             activitiesCount.textContent = events.length;
             if (events.length === 0) {
@@ -738,13 +737,12 @@
          */
         async function loadDashboard() {
             try {
-                const profile = await getUserProfile();
+                // This will now handle the auth check and redirect
+                const profile = await getUserProfile(); 
                 const userCourse = profile.course;
                 
-                // Update header
                 dashboardTitle.textContent = `CR Dashboard - ${userCourse.toUpperCase()}`;
 
-                // Load all sections in parallel for speed
                 await Promise.all([
                     loadStats(userCourse),
                     loadUpcomingLectures(userCourse),
@@ -753,7 +751,7 @@
 
             } catch (error) {
                 console.error('Failed to load dashboard:', error.message);
-                // Error is already shown in the dashboard title
+                // If redirect hasn't happened, error will be shown in the title
             }
         }
 
