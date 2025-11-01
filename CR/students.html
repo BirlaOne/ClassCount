@@ -98,7 +98,7 @@
          * ------------------- */
         .search-bar {
             position: relative;
-            margin-bottom: 24px;
+            margin-bottom: 16px; /* Reduced margin */
         }
         
         .search-bar .material-symbols-outlined {
@@ -134,6 +134,57 @@
         }
 
         /* -------------------
+         * NEW: Filter/Sort Controls
+         * ------------------- */
+        .filter-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            overflow-x: auto; /* Allow horizontal scroll on small screens */
+            padding-bottom: 4px;
+            /* Hide scrollbar */
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .filter-controls::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .filter-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            color: #475569;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            flex-shrink: 0; /* Prevent buttons from shrinking */
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn .material-symbols-outlined {
+            font-size: 18px;
+        }
+        
+        .filter-btn.active {
+            background-color: #eef2ff; /* Light purple */
+            color: #4f46e5;
+            border-color: #c7d2fe;
+        }
+        
+        /* Specific style for toggle button */
+        .filter-btn.toggle-btn.active {
+            background-color: #fef2f2; /* Light red */
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+
+        /* -------------------
          * Student Card
          * ------------------- */
         .student-card {
@@ -143,8 +194,12 @@
             margin-bottom: 16px;
             box-shadow: 0 8px 24px rgba(149, 157, 165, 0.08);
             border: 1px solid #f1f1f1;
-            /* Added for search */
-            transition: display 0.2s; 
+            /* Removed transition: display */
+        }
+        
+        /* NEW: Hide class for JS filtering */
+        .student-card.hidden {
+            display: none;
         }
         
         .card-top {
@@ -358,6 +413,21 @@
                 <span class="material-symbols-outlined">search</span>
                 <input type="text" id="search-input" placeholder="Search by name or ID...">
             </div>
+            
+            <div class="filter-controls">
+                <button class="filter-btn active" id="sort-name-az">
+                    <span class="material-symbols-outlined">sort_by_alpha</span>
+                    Name (A-Z)
+                </button>
+                <button class="filter-btn" id="sort-score-hl">
+                    <span class="material-symbols-outlined">trending_up</span>
+                    Score (High-Low)
+                </button>
+                <button class="filter-btn toggle-btn" id="filter-blacklist">
+                    <span class="material-symbols-outlined">warning</span>
+                    Show Blacklisted
+                </button>
+            </div>
 
             <div id="student-list-container">
                 <p style="text-align: center; color: #718096; padding: 20px 0;">Loading students...</p>
@@ -400,21 +470,28 @@
         const headerSubtitle = document.getElementById('header-subtitle');
         const searchInput = document.getElementById('search-input');
         const studentListContainer = document.getElementById('student-list-container');
+        // --- NEW: Sort/Filter Buttons ---
+        const sortNameBtn = document.getElementById('sort-name-az');
+        const sortScoreBtn = document.getElementById('sort-score-hl');
+        const filterBlacklistBtn = document.getElementById('filter-blacklist');
+
+        // --- 3. GLOBAL DATA STORE ---
+        let allStudentData = []; // Master list of all student data
         
         /**
-         * Returns a CSS class for the score
+         * UPDATED: Returns a CSS class for the score based on new criteria
          */
         function getScoreBadge(score) {
-            if (score >= 80) {
-                return { class: 'high', label: `${score}/100` };
-            } else if (score >= 70) {
-                return { class: 'medium', label: `${score}/100` };
-            } else {
-                return { class: 'low', label: `${score}/100` };
+            if (score > 50) { // Green
+                return { class: 'high', label: `${score.toFixed(0)}/100` };
+            } else if (score >= 35) { // Yellow (35-50)
+                return { class: 'medium', label: `${score.toFixed(0)}/100` };
+            } else { // Red (< 35)
+                return { class: 'low', label: `${score.toFixed(0)}/100` };
             }
         }
         
-      /**
+        /**
          * Main function to load and render the student directory
          */
         async function loadStudentDirectory() {
@@ -451,7 +528,7 @@
                     return;
                 }
 
-                // 3. Update Header (can do this now)
+                // 3. Update Header
                 headerSubtitle.textContent = `${userCourse.toUpperCase()} - ${students.length} students`;
 
                 if (students.length === 0) {
@@ -462,26 +539,11 @@
                 // 4. Get the list of student IDs
                 const studentIds = students.map(s => s.student_id);
 
-                // 5. Fetch all other data in parallel using the studentIds
-                const rolesPromise = _supabase
-                    .from('users')
-                    .select('id, role')
-                    .in('id', studentIds); // 'id' in users table matches 'student_id'
-                    
-                const summaryPromise = _supabase
-                    .from('student_attendance_summary')
-                    .select('student_id, lecture_percentage, event_present')
-                    .in('student_id', studentIds);
-                    
-                // --- THIS IS THE FIX ---
-                // We now use .in('student_id', studentIds) instead of .eq('course', ...)
-                const scoresPromise = _supabase
-                    .from('scores')
-                    .select('student_id, total_score')
-                    .in('student_id', studentIds); 
-                // --- END OF FIX ---
+                // 5. Fetch all other data in parallel
+                const rolesPromise = _supabase.from('users').select('id, role').in('id', studentIds);
+                const summaryPromise = _supabase.from('student_attendance_summary').select('student_id, lecture_percentage, event_present').in('student_id', studentIds);
+                const scoresPromise = _supabase.from('scores').select('student_id, total_score').in('student_id', studentIds); 
 
-                // Await all parallel promises
                 const [
                     { data: roles, error: rolesError },
                     { data: summaries, error: summariesError },
@@ -495,81 +557,33 @@
                 }
                 
                 // 6. Create Maps for efficient data merging
-                // 'id' from 'users' table is the student_id
                 const roleMap = new Map(roles.map(r => [r.id, r.role])); 
                 const summaryMap = new Map(summaries.map(s => [s.student_id, s]));
                 const scoreMap = new Map(scores.map(s => [s.student_id, s.total_score]));
                 
-                // 7. Render Student Cards
-                let html = '';
-                for (const student of students) {
+                // 7. Store merged data in the global variable
+                allStudentData = students.map(student => {
                     const student_id = student.student_id;
-                    
-                    // Get data from maps
                     const role = roleMap.get(student_id);
                     const summary = summaryMap.get(student_id) || { lecture_percentage: 0, event_present: 0 };
                     const score = scoreMap.get(student_id) || 0;
-                    
-                    const scoreBadge = getScoreBadge(score);
-                    const lecturePerc = summary.lecture_percentage.toFixed(0);
-                    const roleCount = (role && role.toLowerCase() !== 'student') ? 1 : 0;
 
-                    // Build Tags
-                    let tagsHtml = `
-                        <div class="tag">${student.course.toUpperCase()}</div>
-                        <div class="tag">${student.year}</div>
-                    `;
-                    
-                    if (role && role.toLowerCase() !== 'student') {
-                        tagsHtml += `
-                            <div class="tag icon-tag cr">
-                                <span class="material-symbols-outlined">star</span>
-                                ${role.toUpperCase()}
-                            </div>
-                        `;
-                    }
-                    
-                    // Build Card
-                    html += `
-                        <div class="student-card" data-student-id="${student_id}" data-student-name="${student.name.toLowerCase()}">
-                            <div class="card-top">
-                                <div>
-                                    <div class="name">${student.name}</div>
-                                    <div class="id">ID: ${student_id}</div>
-                                </div>
-                                <div class="score-badge ${scoreBadge.class}">${scoreBadge.label}</div>
-                            </div>
-                            <div class="card-tags">
-                                ${tagsHtml}
-                            </div>
-                            <div class="attendance-section">
-                                <div class="attendance-header">
-                                    <span class="label">Lecture Attendance</span>
-                                    <span class="percent">${lecturePerc}%</span>
-                                </div>
-                                <div class="progress-bar">
-                                    <div class="progress" style="width: ${lecturePerc}%;"></div>
-                                </div>
-                            </div>
-                            <div class="card-stats">
-                                <div class="stat-item">
-                                    <span>Lectures</span>
-                                    <strong>${lecturePerc}%</strong>
-                                </div>
-                                <div class="stat-item">
-                                    <span>Activities</span>
-                                    <strong>${summary.event_present}</strong>
-                                </div>
-                                <div class="stat-item">
-                                    <span>Roles</span>
-                                    <strong>${roleCount}</strong>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }
+                    return {
+                        id: student_id,
+                        name: student.name,
+                        course: student.course,
+                        year: student.year,
+                        role: (role && role.toLowerCase() !== 'student') ? role : null,
+                        lecturePerc: summary.lecture_percentage.toFixed(0),
+                        eventCount: summary.event_present,
+                        roleCount: (role && role.toLowerCase() !== 'student') ? 1 : 0,
+                        score: score,
+                        scoreBadge: getScoreBadge(score) // Use the updated function
+                    };
+                });
                 
-                studentListContainer.innerHTML = html;
+                // 8. Initial render
+                renderStudentList();
 
             } catch (error) {
                 console.error('Error loading student directory:', error);
@@ -578,27 +592,121 @@
         }
         
         /**
-         * Filters the student list based on search input
+         * NEW: Renders the student list based on global data and filters
          */
-        function filterStudents() {
+        function renderStudentList() {
+            let studentsToRender = [...allStudentData];
             const searchTerm = searchInput.value.toLowerCase();
-            const allCards = studentListContainer.querySelectorAll('.student-card');
+
+            // 1. Filter by Search
+            if (searchTerm) {
+                studentsToRender = studentsToRender.filter(s => 
+                    s.name.toLowerCase().includes(searchTerm) ||
+                    s.id.toString().includes(searchTerm)
+                );
+            }
+
+            // 2. Filter by Blacklist Toggle
+            if (filterBlacklistBtn.classList.contains('active')) {
+                studentsToRender = studentsToRender.filter(s => s.score < 35);
+            }
+
+            // 3. Sort
+            if (sortScoreBtn.classList.contains('active')) {
+                studentsToRender.sort((a, b) => b.score - a.score);
+            } else {
+                // Default sort is Name A-Z
+                studentsToRender.sort((a, b) => a.name.localeCompare(b.name));
+            }
             
-            allCards.forEach(card => {
-                const name = card.dataset.studentName;
-                const id = card.dataset.studentId.toString();
+            // 4. Render HTML
+            if (studentsToRender.length === 0) {
+                 studentListContainer.innerHTML = '<p style="text-align: center; color: #718096; padding: 20px 0;">No students match the current filters.</p>';
+                 return;
+            }
+            
+            let html = '';
+            for (const student of studentsToRender) {
+                // Build Tags
+                let tagsHtml = `
+                    <div class="tag">${student.course.toUpperCase()}</div>
+                    <div class="tag">${student.year}</div>
+                `;
                 
-                if (name.includes(searchTerm) || id.includes(searchTerm)) {
-                    card.style.display = 'block';
-                } else {
-                    card.style.display = 'none';
+                if (student.role) {
+                    tagsHtml += `
+                        <div class="tag icon-tag cr">
+                            <span class="material-symbols-outlined">star</span>
+                            ${student.role.toUpperCase()}
+                        </div>
+                    `;
                 }
-            });
+                
+                // Build Card
+                html += `
+                    <div class="student-card">
+                        <div class="card-top">
+                            <div>
+                                <div class="name">${student.name}</div>
+                                <div class="id">ID: ${student.id}</div>
+                            </div>
+                            <div class="score-badge ${student.scoreBadge.class}">${student.scoreBadge.label}</div>
+                        </div>
+                        <div class="card-tags">
+                            ${tagsHtml}
+                        </div>
+                        <div class="attendance-section">
+                            <div class="attendance-header">
+                                <span class="label">Lecture Attendance</span>
+                                <span class="percent">${student.lecturePerc}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: ${student.lecturePerc}%;"></div>
+                            </div>
+                        </div>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <span>Lectures</span>
+                                <strong>${student.lecturePerc}%</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span>Activities</span>
+                                <strong>${student.eventCount}</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span>Roles</span>
+                                <strong>${student.roleCount}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            studentListContainer.innerHTML = html;
         }
         
         // --- 6. EVENT LISTENERS ---
         document.addEventListener('DOMContentLoaded', loadStudentDirectory);
-        searchInput.addEventListener('input', filterStudents);
+        
+        // --- NEW: Sort/Filter Listeners ---
+        searchInput.addEventListener('input', renderStudentList);
+
+        sortNameBtn.addEventListener('click', () => {
+            sortNameBtn.classList.add('active');
+            sortScoreBtn.classList.remove('active');
+            renderStudentList();
+        });
+
+        sortScoreBtn.addEventListener('click', () => {
+            sortNameBtn.classList.remove('active');
+            sortScoreBtn.classList.add('active');
+            renderStudentList();
+        });
+
+        filterBlacklistBtn.addEventListener('click', () => {
+            filterBlacklistBtn.classList.toggle('active');
+            renderStudentList();
+        });
 
     </script>
 
