@@ -338,7 +338,7 @@
          * Bottom Navigation
          * ------------------- */
         .bottom-nav {
-            position: absolute; 
+            position: fixed; 
             bottom: 0;
             left: 0;
             right: 0;
@@ -392,6 +392,9 @@
                 border: 1px solid #f8f9fa;
             }
             .bottom-nav {
+                position: absolute; /* <-- REVERT for desktop */
+        border-top-left-radius: 0; /* <-- ADD this */
+        border-top-right-radius: 0; /* <-- ADD this */
                 border-bottom-left-radius: 24px;
                 border-bottom-right-radius: 24px;
             }
